@@ -14,3 +14,6 @@ if __name__ == '__main__':
     l('dotbashrc', '~/.bashrc')
     l('dotbash_profile', '~/.bash_profile')
     l('.', '~/.bash.d')
+    l('dotvimrc', '~/.vimrc')
+    l('vim', '~/.vim')
+    l('dotscreenrc', '~/.screenrc')
