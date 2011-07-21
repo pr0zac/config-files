@@ -1,0 +1,132 @@
+#include <udt.h>
+#include <ccc.h>
+#include <cmath>
+#include <cstring>
+#include "core.h"
+#ifndef CCH
+
+class CTCP: public CCC
+{
+public:
+   void init()
+   {
+      m_bSlowStart = true;
+      m_issthresh = 83333;
+
+      m_dPktSndPeriod = 0.0;
+      m_dCWndSize = 2.0;
+
+      setACKInterval(2);
+      setRTO(1000000);
+   }
+
+   virtual void onACK(const int& ack)
+   {
+      if (ack == m_iLastACK)
+      {
+         if (3 == ++ m_iDupACKCount)
+            DupACKAction();
+         else if (m_iDupACKCount > 3)
+            m_dCWndSize += 1.0;
+         else
+            ACKAction();
+      }
+      else
+      {
+         if (m_iDupACKCount >= 3)
+            m_dCWndSize = m_issthresh;
+
+         m_iLastACK = ack;
+         m_iDupACKCount = 1;
+
+         ACKAction();
+      }
+   }
+
+   virtual void onTimeout()
+   {
+      m_issthresh = getPerfInfo()->pktFlightSize / 2;
+      if (m_issthresh < 2)
+         m_issthresh = 2;
+
+      m_bSlowStart = true;
+      m_dCWndSize = 2.0;
+   }
+
+protected:
+   virtual void ACKAction()
+   {
+      if (m_bSlowStart)
+      {
+         m_dCWndSize += 1.0;
+
+         if (m_dCWndSize >= m_issthresh)
+            m_bSlowStart = false;
+      }
+      else
+         m_dCWndSize += 1.0/m_dCWndSize;
+   }
+
+   virtual void DupACKAction()
+   {
+      m_bSlowStart = false;
+
+      m_issthresh = getPerfInfo()->pktFlightSize / 2;
+      if (m_issthresh < 2)
+         m_issthresh = 2;
+
+      m_dCWndSize = m_issthresh + 3;
+   }
+
+protected:
+   int m_issthresh;
+   bool m_bSlowStart;
+
+   int m_iDupACKCount;
+   int m_iLastACK;
+};
+
+
+class CUDPBlast: public CCC
+{
+public:
+   CUDPBlast()
+   {
+      m_dPktSndPeriod = (m_iMSS * 8.0)/1000000;
+      m_dCWndSize = 8333300;
+   }
+//
+//public:
+//   void setRate(double mbps)
+//   {
+//      m_dPktSndPeriod = (m_iMSS * 8.0) / mbps;
+//   }
+};
+
+class ZUDTCC: public CCC
+{
+public:
+	ZUDTCC();
+	
+public:
+	virtual void init();
+	virtual void onACK(const int32_t&);
+	virtual void onLoss(const int32_t*, const int&);
+	virtual void onTimeout();
+	
+private:
+	int m_iRCInterval;			// UDT Rate control interval
+	uint64_t m_LastRCTime;		// last rate increase time
+	bool m_bSlowStart;			// if in slow start phase
+	int32_t m_iLastAck;			// last ACKed seq no
+	bool m_bLoss;			// if loss happened since last rate increase
+	int32_t m_iLastDecSeq;		// max pkt seq no sent out when last decrease happened
+	double m_dLastDecPeriod;		// value of pktsndperiod when last decrease happened
+	int m_iNAKCount;                     // NAK counter
+	int m_iDecRandom;                    // random threshold on decrease by number of loss events
+	int m_iAvgNAKNum;                    // average number of NAKs per congestion
+	int m_iDecCount;			// number of decreases in a congestion epoch
+};
+
+#define CCH
+#endif

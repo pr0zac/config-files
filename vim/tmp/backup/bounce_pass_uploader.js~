@@ -1,0 +1,379 @@
+array_contains = function (array, value) {
+  var i = array.length;
+  while (i--) {
+    if (array[i] === value) {
+      return true;
+    }
+  }
+  return false;
+};
+
+remove_from_array = function (array, value) {
+  var i = array.length;
+  while (i--) {
+    if (array[i] === value) {
+      array.splice(i,1);
+    }
+  }
+  return array;
+};
+
+extend = function(first, second) {
+  var prop = null;
+  for (prop in second) {
+    if(prop) {
+      first[prop] = second[prop];
+    }
+  }
+};
+/**
+* Class that creates upload widget using Bounce-Pass server
+* @inherits qq.FileUploader
+*/
+BouncePassUploader = function (o) {
+  qq.FileUploaderBasic.apply(this, arguments);
+  
+  extend(this._options, {
+    password_template: '<div class="bp-password">'+
+    '<input class="bp-password-field" type="password"></input></div>',
+    
+    button_template: '<div class="bp-upload-button"><h1>Bounce a file</h1></div>',
+    
+    classes: {
+      password: 'bp-password',
+      password_field: 'bp-password-field',
+      button: 'bp-upload-button'
+    }
+  });
+  
+  extend(this._options, o);
+  
+  var self = this;
+  self._classes = self._options.classes;
+  self._password = null;
+  self._button = null;
+  
+  self.transfer_type = null;
+  self.transfer_key = null;
+  self.file_ids = {};
+  
+  if (self._options.secured) {
+    self.socket = new io.Socket(null, {port:443, secure: true});
+  }
+  else {
+    self.socket = new io.Socket(null);
+  }
+  self.socket.on('connect', function () {
+    if (self._options.onSocketConnect) {
+      self._options.onSocketConnect();
+    }
+    self._sendKeepAlive();
+    $(self).stopTime('reconnect');
+  });
+  self.socket.on('disconnect', function () {
+    if (self._options.onSocketDisconnect) {
+      self._options.onSocketDisconnect();
+    }
+    if (!self.socket.connected && !self.socket.connecting) {
+      self.socket.connect();
+      $(self).everyTime(2000, 'reconnect', self.reconnect);
+    }
+  });
+  self.socket.on('message', function (message) {
+    if (message.message_type === 'offer_bounce_pass' || message.message_type === 'offer_flash_transfer') {
+      self._onTransferKey(message);
+    }
+    else if (message.message_type === 'start_bounce_pass') {
+      self._startBouncePass(message);
+    }
+    else if (message.message_type === 'keep_alive_flash_transfer' || message.message_type === 'keep_alive_bounce_pass') {
+      self._keepAliveCallback(message);
+    }
+  });
+  self.socket.connect();
+};
+
+// inherit from File Uploader
+extend(BouncePassUploader.prototype, qq.FileUploaderBasic.prototype);
+
+extend(BouncePassUploader.prototype, {
+  setTransferType: function (type) {
+    this.transfer_type = type;
+  },
+  reconnect: function () {
+    if (!this.socket.connected && !this.socket.connecting) {
+      this.socket.connect();
+    }
+  },
+  reset: function () {
+    $(this).stopTime('keep-alive');
+    this.transfer_key = null;
+    this.transfer_type = null;
+    this.file_ids = {};
+    this._password = null;
+    this._button = null;
+  },
+  setElements: function(password_element, button_element) {
+    this._password = password_element;
+    this._password.innerHTML = this._options.password_template;
+    this._button = button_element;
+    this._button.innerHTML = this._options.button_template;
+    this._button = this._createUploadButton(this._find(this._button, 'button'));
+  },
+  sendFlashOffer: function (transfer_info) {
+    this.transfer_type = 'flash_transfer';
+    var message = {'message_type': 'offer_flash_transfer'};
+    message.peer_id = transfer_info.peer_id;
+    message.transfer_size = transfer_info.transfer_size;
+    message.file_count = transfer_info.file_count;
+    message.multicast = transfer_info.multicast;
+    if (transfer_info.password) {
+      message.password_hash = hex_md5(transfer_info.password);
+    }
+    if (this._options.onSendFlashOffer) {
+      this._options.onSendFlashOffer(message);
+    }
+    this.socket.send(message);
+  },
+  _sendBPOffer: function () {
+    this.transfer_type = 'bounce_pass';
+    var message = {'message_type': 'offer_bounce_pass', 'total_size': 0};
+    var password_field = this._find(this._password, 'password_field');
+    var password = password_field.value;
+    if (password && password !== '') {
+      message.password_hash = hex_md5(password);
+    }
+    message.files = [];
+    var file_id;
+    for (file_id in this.file_ids) {
+      if (!this.file_ids[file_id].claimed) {
+        var file = {};
+        file.file_id = file_id;
+        file.file_name = this.file_ids[file_id].file_name;
+        file.file_size = this.file_ids[file_id].file_size;
+        file.file_type = this.file_ids[file_id].file_type;
+        message.files.push(file);
+        message.total_size += file.file_size;
+      }
+    }
+    if (this._options.onSendBPOffer) {
+      this._options.onSendBPOffer(message);
+    }
+    this.socket.send(message);
+  },
+  _onTransferKey: function (response) {
+    this.transfer_key = response.transfer_key;
+    if (response.file_ids) {
+      var index = response.file_ids.length;
+      while (index--) {
+        var file_id = response.file_ids[index];
+        if (this.file_ids[file_id]) {
+          this.file_ids[file_id].keep_alive = true;
+        }
+      }
+    }
+    if (this._options.onTransferKey) {
+      this._options.onTransferKey(response);
+    }
+    $(this).everyTime(20000, 'keep-alive', this._sendKeepAlive);
+  },
+  _sendKeepAlive: function () {
+    if (this._options.onKeepAlive) {
+      this._options.onKeepAlive();
+    }
+    if (this.transfer_key) {
+      var message;
+      if (this.transfer_type === 'bounce_pass') {
+        message = {'message_type': 'keep_alive_bounce_pass', 'transfer_key': this.transfer_key, 'file_ids': []};
+        var file_id;
+        for (file_id in this.file_ids) {
+          if (this.file_ids[file_id].keep_alive) {
+            message.file_ids.push(file_id);
+          }
+        }
+        if (message.file_ids.length === 0) {
+          this.stopKeepAlive();
+        }
+        else {
+          this.socket.send(message);
+        }
+      }
+      else {
+        message = {'message_type': 'keep_alive_flash_transfer', 'transfer_key': this.transfer_key};
+        this.socket.send(message);
+      }
+    }
+    else {
+      this.stopKeepAlive();
+    }
+  },
+  _keepAliveCallback: function (message) {
+    if ((message.status_code === 500) || (message.message_type === 'keep_alive_bounce_pass' && message.file_ids.length === 0)) {
+      this.stopKeepAlive();
+    }
+  },
+  stopKeepAlive: function () {
+    $(this).stopTime('keep_alive');
+  },
+  _startBouncePass: function (message) {
+    if (message.transfer_key === this.transfer_key && this.file_ids[message.file_id]) {
+      this.file_ids[message.file_id].keep_alive = false;
+      this.file_ids[message.file_id].claimed = true;
+      if (this._options.onStartBouncePass) {
+        this._options.onStartBouncePass(message);
+      }
+      this._onSubmit(message.file_id, this.file_ids[message.file_id].file_name);
+      var parameters = {};
+      parameters.transfer_hash = message.transfer_hash;
+      parameters.transfer_key = message.transfer_key;
+      parameters.file_id = message.file_id;
+      this._handler.upload(message.file_id, parameters);
+    }
+  },
+  _addFile: function (fileContainer, cb) {
+    var file_id = this._handler.add(fileContainer);
+    var file_name = this._handler.getName(file_id);
+    var file_size = this._handler.getSize(file_id);
+    var file_type = this._handler.getType(file_id);
+    this.file_ids[file_id] = {'file_name': file_name, 'file_size': file_size, 'file_type': file_type, 'keep_alive': false, 'claimed': false, 'next': 0, 'loaded0': 0};
+    if (cb) {
+      cb();
+    }
+  },
+  _addFileList: function (files, cb) {
+    var i, j;
+    for (i=0; i<files.length; i++) {
+      if (!this._validateFile(files[i])) {
+        return;
+      }
+    }
+    for (j=0; j<files.length; j++) {
+      this._addFile(files[j]);
+    }
+    
+    if (cb) {
+      cb();
+    }
+  },
+  _validateFile: function(file) {
+    var name, size;
+
+    if (file.value) {
+      // it is a file input
+      // get input value and remove path to normalize
+      name = file.value.replace(/.*(\/|\\)/, "");
+    }
+    else {
+      // fix missing properties in Safari
+      name = file.fileName !== null ? file.fileName : file.name;
+      size = file.fileSize !== null ? file.fileSize : file.size;
+    }
+
+    return true;
+  },
+  _onInputChange: function (input) {
+    var self = this;
+    if (self._handler instanceof BouncePassUploadHandler) {
+      self._addFileList(input.files, function () {
+        self._sendBPOffer();
+      });
+    }
+    else {
+      if (self._validateFile(input)) {
+        self._addFile(input, function () {
+          self._sendBPOffer();
+        });
+      }
+    }
+    self._button.reset();
+  },
+  _createUploadHandler: function () {
+    var self = this,
+    handlerClass;
+
+    if(BouncePassUploadHandler.isSupported()) {
+      handlerClass = BouncePassUploadHandler;
+    } else {
+      handlerClass = qq.UploadHandlerForm;
+    }
+    
+    var handler = new handlerClass({
+      debug: this._options.debug,
+      action: this._options.action,
+      maxConnections: this._options.maxConnections,
+      onProgress: function (id, fileName, loaded, total) {
+        self._onProgress(id, fileName, loaded, total);
+      },
+      onComplete: function (id, fileName, result) {
+        self._onComplete(id, fileName, result);
+      },
+      onCancel: function (id, fileName) {
+        self._onCancel(id, fileName);
+      }
+    });
+    return handler;
+  },
+  _find: function (parent, type) {
+    var element = qq.getByClass(parent, this._options.classes[type])[0];
+    if (!element) {
+      throw new Error('element not found ' + type);
+    }
+    return element;
+  },
+  _onSubmit: function (id, fileName) {
+    qq.FileUploaderBasic.prototype._onSubmit.apply(this, arguments);
+  },
+  _onProgress: function (id, fileName, loaded, total) {
+    if (loaded > this.file_ids[id]['loaded'+this.file_ids[id].next]) {
+      this.file_ids[id]['loaded'+this.file_ids[id].next] = loaded;
+    }
+    else {
+      this.file_ids[id]['loaded'+this.file_ids[id].next] = 4294967296;
+      this.file_ids[id].next++;
+      this.file_ids[id]['loaded'+this.file_ids[id].next] = loaded;
+    }
+    var index = this.file_ids[id].next + 1;
+    var total_loaded = 0;
+    while (index--) {
+      total_loaded += this.file_ids[id]['loaded'+index];
+    }
+    total = this.file_ids[id].file_size;
+    qq.FileUploaderBasic.prototype._onProgress.apply(this, arguments);
+    if (this._options.onProgress) {
+      this._options.onProgress(id, fileName, total_loaded, total);
+    }
+  },
+  _onComplete: function (id, fileName, result) {
+    qq.FileUploaderBasic.prototype._onComplete.apply(this, arguments);
+    if (this._options.onComplete) {
+      this._options.onComplete(id, fileName, result);
+    }
+  },
+  _onCancel: function (id, fileName) {
+    qq.FileUploaderBasic.prototype._onComplete.apply(this, arguments);
+    if (this._options.onCancel) {
+      this._options.onCancel(id, fileName);
+    }
+  },
+});
+
+BouncePassUploadHandler = function (o) {
+  qq.UploadHandlerXhr.apply(this, arguments);
+};
+
+BouncePassUploadHandler.isSupported = function () {
+  var input = document.createElement('input');
+  input.type = 'file';
+
+  var return_bool = 'multiple' in input && typeof File !== undefined && typeof (new XMLHttpRequest()).upload !== undefined;
+  return (return_bool);
+};
+
+extend(BouncePassUploadHandler.prototype, qq.UploadHandlerXhr.prototype);
+
+extend(BouncePassUploadHandler.prototype, {
+  getType: function (id) {
+    var file = this._files[id];
+    return file.type;
+  }
+});

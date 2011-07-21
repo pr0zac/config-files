@@ -1,0 +1,5 @@
+#!/bin/sh
+
+echo "peerid	$*\n"
+sleep 10
+

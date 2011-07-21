@@ -1,0 +1,217 @@
+class MagicController < ApplicationController
+    skip_before_filter :verify_auth_token, :only => [:get_updated_for_user]
+    skip_before_filter :verify_admin_logged_in, :only => [:get_updated_for_user]
+    before_filter :verify_device_auth_token, :only => [:get_updated_for_user]
+
+    @@model_to_helper = {"profile" => ProfileHelper,
+                         "provisioning_profile" => ProvisioningProfileHelper,
+                         "device" => DeviceHelper,
+                         "device_group" => DeviceGroupHelper,
+                         "user" => UserHelper,
+                         "user_group" => UserGroupHelper,
+                         "task" => TaskHelper,
+                         "file" => DataFileHelper,
+                         "settings" => SettingsHelper
+                        }
+    
+    def get_updated
+        last_checked = session[:user][:last_checked]
+        
+        return_hash = {}
+
+        if last_checked != nil
+            for model_class in [ApnKnobSet, CalDavKnobSet, CalSubKnobSet, CardDavKnobSet, CertificateKnobSet, DataFile, Device, DeviceGroup, DirectoryKnobSet, EmailKnobSet,
+                                ExchangeKnobSet, GeneralKnobSet, IchatKnobSet, LdapKnobSet, McxKnobSet, InterfaceKnobSet, PasscodeKnobSet, Profile, ProvisioningProfile,
+                                RestrictionsKnobSet, ScepKnobSet, SecurityKnobSet, Settings, Task, User, UserGroup, VpnKnobSet, WebClipKnobSet, WifiKnobSet]
+                
+                models = model_class.find( :all )
+            
+                updated_models = []
+                deleted_models = []
+                for model_inst in models
+                    if model_inst.updated_at != nil && model_inst.updated_at >= last_checked && model_inst.deleted != true
+                        if model_class == Device
+                            if model_inst.udid != nil || model_inst.DeviceName != nil || model_inst.Serial != nil || model_inst.IMEI != nil
+                                updated_models.push(model_inst.get_attributes)
+                            elsif model_inst.last_checkin_time == nil || model_inst.last_checkin_time < ( Time.now - 60 * 60 * 24 )
+                              model_inst.delete
+                              deleted_models.push(model_inst.get_attributes)
+                            end
+                        else
+                            updated_models.push(model_inst.get_attributes)
+                        end
+                    elsif model_inst.deleted == true
+                      if model_inst.updated_at >= last_checked
+                        deleted_models.push(model_inst.get_attributes)
+                      end
+                      cur_settings = Settings.get_settings
+                      if model_inst.updated_at <= Time.now - cur_settings.user_timeout && model_class != Device
+                        model_inst.destroy
+                      end
+                    end
+
+                    if updated_models.length > 0
+                        return_hash[model_class.to_s] = { :updated => updated_models }
+                    end
+
+                    if deleted_models.length > 0
+                      if return_hash.has_key?(model_class.to_s)
+                        return_hash[model_class.to_s][:deleted] = deleted_models
+                      else
+                        return_hash[model_class.to_s] = { :deleted => deleted_models }
+                      end
+                    end
+                end
+            end
+        end
+        
+        session[:user][:last_checked] = Time.now
+        
+        render :json => { :result => return_hash }
+    end
+   
+    def get_updated_for_user
+      last_checked = session[:user][:last_checked]
+      if last_checked == nil
+        last_checked = Time.now - 3
+      end
+      
+      user_guid = session[:user]['generated_uid']
+      user = User.find_by_guid(user_guid)
+
+      return_hash = {}
+      
+      if user != nil
+        if last_checked == nil || user.updated_at > last_checked
+          return_hash[:users] = { :updated => [user.get_attributes] }
+        end
+        
+        most_recent_tasks = []
+        updated_devices = []
+        deleted_devies = []
+        for device in user.devices
+          if device.updated_at != nil && device.updated_at > last_checked && (device.udid != nil || device.DeviceName != nil || device.Serial != nil || device.IMEI != nil) && device.deleted != true
+            updated_devices.push(device.get_attributes)
+          elsif device.deleted == true && device.updated_at != nil && device.updated_at >= last_checked
+            deleted_devices.push(device.get_attributes)
+          elsif device.last_checkin_time == nil || device.last_checkin_time < ( Time.now - 60 * 60 * 24 )
+            deleted_devices.push(device.get_attributes)
+            device.delete
+          end
+
+          task = Task.find( :last, :conditions => ["target_id = ? AND target_class = ? AND task_type = ANY(ARRAY['DeviceLock','ClearPasscode','EraseDevice'])", device.id, device.class.to_s], :order => :updated_at )
+          if task != nil && task.updated_at >= last_checked
+            most_recent_tasks.push(task)
+          end
+        end
+        
+        if most_recent_tasks.length > 0
+          return_hash[:tasks] = { :updated => most_recent_tasks }
+        end
+        
+        if updated_devices.length > 0
+          return_hash[:devices] = { :updated => updated_devices }
+        end
+        
+        if deleted_devices.length > 0
+          if !return_hash.include?(:devices)
+            return_hash[:devices] = {}
+          end
+          return_hash[:devices][:deleted] = deleted_devices
+        end
+
+        updated_profiles = []
+        deleted_profiles = []
+        for profile in user.profiles
+          if profile.updated_at != nil && profile.updated_at > last_checked && profile.deleted != true
+            updated_profiles.push(profile.get_attributes)
+          elsif profile.deleted == true && profile.updated_at != nil && profile.updated_at >= last_checked
+            deleted_profiles.push(profile.get_attributes)
+          end
+        end
+
+        if updated_profiles.length > 0
+          return_hash[:profiles] = { :updated => updated_profiles }
+        end
+
+        if deleted_profiles.length > 0
+          if !return_hash.include?(:profiles)
+            return_hash[:profiles] = {}
+          end
+          return_hash[:profiles][:deleted] = deleted_profiles
+        end
+      end
+
+      session[:user][:last_checked] = Time.now
+
+      render :json => { :result => return_hash }
+    end
+
+    def do_magic
+        post_data = request.body.read
+        incoming_request = JSON.parse(post_data)
+        
+        return_hash = {}
+        
+        incoming_request.each do |request_model, model_commands|
+            if !SettingsHelper.verify_od_apns
+                if ['device','device_group','task'].include?(request_model)
+                    next
+                end
+            end
+            
+            model_helper = @@model_to_helper[request_model]
+            if model_helper == nil && (request_model.include?("knob_set") || request_model.include?("KnobSet"))
+                model_helper = KnobSetHelper
+            end
+            
+            model_commands.each do |command, params_array|
+                params_array.each do |entry|
+                    if model_helper == KnobSetHelper
+                        result_hash = model_helper.send(command, request_model, *entry)
+                    else
+                        if entry == nil || entry.length == 0
+                            result_hash = model_helper.send(command)
+                        else
+                            if entry[0] == nil
+                                entry = entry[1..entry.length-1]
+                            end
+                            result_hash = model_helper.send(command, *entry)
+                        end
+                    end
+                    
+                    if result_hash != nil
+                        result_hash.each do |result_model, model_changes|
+                            if !return_hash.key?(result_model)
+                                return_hash[result_model] = model_changes
+                            else
+                                model_changes.each do |change, model_data_array|
+                                    if !return_hash[result_model].key?(change)
+                                        return_hash[result_model][change] = model_data_array.collect { |model_data| model_data.inject({}){|memo, (k,v)| memo[k.to_sym] = v;  memo} }
+                                    else
+                                        model_data_array.each do |changed_model_data|
+                                            # Convert string keys to symbols, so we
+                                            # can both compare inside the find
+                                            # as well as properly merge if needed.
+                                            changed_model_data = changed_model_data.inject({}){|memo, (k,v)| memo[k.to_sym] = v;  memo}
+                                            id_match = return_hash[result_model][change].find { |entry| [:user, :user_group].include?(result_model) ? entry[:guid] == changed_model_data[:guid] : entry[:id] == changed_model_data[:id] }
+                                
+                                            if id_match == nil
+                                                return_hash[result_model][change].push( changed_model_data )
+                                            else
+                                                return_hash[result_model][change].delete(id_match)
+                                                return_hash[result_model][change].push(id_match.merge(changed_model_data))
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        render :json => { :result => return_hash }
+    end
+end

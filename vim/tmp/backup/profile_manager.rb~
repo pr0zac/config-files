@@ -1,0 +1,478 @@
+require 'plist'
+require 'base64'
+require 'sha1'
+require 'timeout'
+
+class ProfileManager
+  @@signing_cert = nil
+  @@signing_key = nil
+
+    def self.encoded_identity_cert
+        return Base64.encode64(File.read("#{File.dirname(__FILE__)}/profile_manager/client.p12"))
+    end
+    
+    def self.generate_ota_bootstrap_profile(challenge, hostname)
+        uuid = UUID.new
+        
+        if RAILS_ENV == 'production'
+            hostname = hostname
+        elsif
+            hostname = "#{hostname}:3000"
+        end
+        
+        cur_settings = Settings.get_settings
+        if cur_settings.ssl_active == true
+            ota_bootstrap_url = URI.join("https://#{hostname}","devicemanagement/api/device/ota_service").to_s
+        else
+            ota_bootstrap_url = URI.join("http://#{hostname}","devicemanagement/api/device/ota_service").to_s
+        end
+       
+        organization = cur_settings.server_organization
+
+        profile_hash = {"PayloadDisplayName" => "Device Enrollment",
+                        "PayloadIdentifier" => "com.apple.ota.#{Socket.gethostname}.bootstrap",
+                        "PayloadRemovalDisallowed" => false,
+                        "PayloadType" => "Configuration",
+                        "PayloadUUID" => uuid.generate,
+                        "PayloadVersion" => 1,
+                        "PayloadOrganization" => organization,
+                        "PayloadDescription" => "Enrolls your device with the management server.",
+                        "PayloadType" => "Profile Service",
+                        "PayloadContent" => {"URL" => ota_bootstrap_url,
+                                             "DeviceAttributes" => ["DEVICE_NAME", "UDID", "IMEI", "SERIAL", "VERSION", "PRODUCT", "COMPROMISED"],
+                                             "Challenge" => challenge
+                                            },
+                       }
+        
+        profile = Plist::Emit.dump(profile_hash)
+
+        if @@signing_cert == nil || @@signing_key == nil
+          cur_settings = Settings.get_settings
+          cert_key_array = ScepHelper::get_signing_certificate(cur_settings.od_master)
+          if cert_key_array != nil && cert_key_array.class == Array
+            @@signing_cert = OpenSSL::X509::Certificate.new(cert_key_array[0])
+            @@signing_key = OpenSSL::PKey::RSA.new(cert_key_array[1])
+          else
+            Rails.logger.warn("Could not find a signing certificate, exporting a raw profile file instead.")
+            return profile
+          end
+        end
+        
+        signed_profile = OpenSSL::PKCS7::sign(@@signing_cert, @@signing_key, profile, [], OpenSSL::PKCS7::BINARY).to_der
+
+        return signed_profile
+    end
+        
+    def self.generate_ota_cert_profile(certificate, cert_uuid)
+        profile_hash = {"PayloadVersion" => 1,
+                        "PayloadContent"=> [{"PayloadVersion" => 1,
+                                             "PayloadOrganization" => "Apple Inc.",
+                                             "PayloadIdentifier" => "com.apple.profileservice.credential",
+                                             "PayloadDescription" => "Provides device authentication.",
+                                             "PayloadType" => "com.apple.security.pkcs12",
+                                             "PayloadUUID" => cert_uuid,
+                                             "PayloadDisplayName" => "OTA Certificate",
+                                             "PayloadCertificateFileName" => "client.p12",
+                                             "PayloadContent" => BinaryData.new(certificate),
+                                             "Password" => "password"
+                                            }],
+                        "PayloadIdentifier" => "com.apple.config.#{Socket.gethostname}.ota",
+                        "PayloadDescription" => "Identity Certificate for OTA.",
+                        "PayloadType" => "Configuration",
+                        "PayloadUUID" => UUID.new.generate,
+                        "PayloadDisplayName" => "Identity Certificate Profile"
+                       }
+        
+        profile = Plist::Emit.dump(profile_hash)
+
+        if @@signing_cert == nil || @@signing_key == nil
+          cur_settings = Settings.get_settings
+          cert_key_array = ScepHelper::get_signing_certificate(cur_settings.od_master)
+          if cert_key_array != nil && cert_key_array.class == Array
+            @@signing_cert = OpenSSL::X509::Certificate.new(cert_key_array[0])
+            @@signing_key = OpenSSL::PKey::RSA.new(cert_key_array[1])
+          else
+            Rails.logger.warn("Could not find a signing certificate, exporting a raw profile file instead.")
+            return profile
+          end
+        end
+        
+        signed_profile = OpenSSL::PKCS7::sign(@@signing_cert, @@signing_key, profile, [], OpenSSL::PKCS7::BINARY).to_der
+
+        return signed_profile
+    end
+    
+    def self.generate_scep_profile(device, hostname)
+        uuid = UUID.new
+
+        cur_settings = Settings.get_settings
+        if cur_settings.od_master == "127.0.0.1"
+            scep_host = hostname
+        else
+            scep_host = cur_settings.od_master
+        end
+
+        root_cert = nil
+        raw_root_cert = ScepHelper::get_root_certificate(cur_settings.od_master)
+        if raw_root_cert != nil && raw_root_cert != ""
+            root_cert = OpenSSL::X509::Certificate.new(raw_root_cert)
+        else
+            Rails.logger.warn("Could not retrieve root certificate from open directory server.")
+            return nil
+        end
+        fingerprint = Base64.encode64(SHA1.hexdigest(root_cert.to_der).to_a.pack("H*"))
+
+        if device.scep_challenge == nil || device.scep_challenge == "" || device.scep_uuid == nil
+            device.scep_challenge = ScepHelper::get_challenge_for_udid(device.udid, cur_settings.od_master)
+            device.scep_uuid = uuid.generate
+            device.save
+        end
+        
+        organization = cur_settings.server_organization
+
+        profile_hash = {"PayloadVersion" => 1,
+                        "PayloadOrganization" => organization,
+                        "PayloadContent"=> [{"PayloadVersion" => 1,
+                                             "PayloadOrganization" => organization,
+                                             "PayloadContent" => {
+                                                                  "Subject" => [[["CN", "Device Management Identity Certificate"]]],
+                                                                  "Name" => "Device Management Identity Certificate",
+                                                                  "Keysize" => 1024,
+                                                                  "Challenge" => device.scep_challenge,
+                                                                  "CAFingerprint" => BinaryData.new(fingerprint),
+                                                                  "URL" => "http://#{scep_host}:1640/",
+                                                                  "Key Usage" => 0,
+                                                                  "Key Type" => "RSA"
+                                                                 },
+                                             "PayloadIdentifier" => "com.apple.mdmconfig.SCEP",
+                                             "PayloadDescription" => "Configures SCEP",
+                                             "PayloadType" => "com.apple.security.scep",
+                                             "PayloadUUID" => device.scep_uuid,
+                                             "PayloadDisplayName" => "MDM Server SCEP"
+                                            }],
+                        "PayloadIdentifier" => "com.apple.#{Socket.gethostname}.scepconfig",
+                        "PayloadDescription" => "SCEP profile for MDM Server.",
+                        "PayloadRemovalDisallowed" => false,
+                        "PayloadType" => "Configuration",
+                        "PayloadUUID" => uuid.generate,
+                        "PayloadDisplayName" => "SCEP Configuration Profile"
+                       }
+
+        profile = Plist::Emit.dump(profile_hash)
+
+        if @@signing_cert == nil || @@signing_key == nil
+          cur_settings = Settings.get_settings
+          cert_key_array = ScepHelper::get_signing_certificate(cur_settings.od_master)
+          if cert_key_array != nil && cert_key_array.class == Array
+            @@signing_cert = OpenSSL::X509::Certificate.new(cert_key_array[0])
+            @@signing_key = OpenSSL::PKey::RSA.new(cert_key_array[1])
+          else
+            Rails.logger.warn("Could not find a signing certificate, exporting a raw profile file instead.")
+            return profile
+          end
+        end
+        
+        signed_profile = OpenSSL::PKCS7::sign(@@signing_cert, @@signing_key, profile, [], OpenSSL::PKCS7::BINARY).to_der
+
+        return signed_profile        
+    end
+    
+    def self.generate_mdm_binding_profile(device, hostname)
+        uuid = UUID.new
+
+        cur_settings = Settings.get_settings        
+        if cur_settings.od_master == "127.0.0.1"
+            scep_host = hostname
+        else
+            scep_host = cur_settings.od_master
+        end
+
+        if cur_settings.apns_active && cur_settings.apns_topic == nil
+            ApplePushNotificationService.updateSSLInformation
+        end
+
+        root_cert = nil
+        raw_root_cert = ScepHelper::get_root_certificate(cur_settings.od_master)
+        if raw_root_cert != nil && raw_root_cert != ""
+            root_cert = OpenSSL::X509::Certificate.new(raw_root_cert)
+        else
+            Rails.logger.warn("Could not retrieve root certificate from open directory server.")
+            return nil
+        end
+        fingerprint = Base64.encode64(SHA1.hexdigest(root_cert.to_der).to_a.pack("H*"))
+
+        if device.scep_challenge == nil || device.scep_challenge == "" || device.scep_uuid == nil
+            device.scep_challenge = ScepHelper::get_challenge_for_udid(device.udid, cur_settings.od_master)
+            device.scep_uuid = uuid.generate
+            device.save
+        end
+                    
+        root_payload_identifier = "com.apple.config.#{Socket.gethostname}.mdm"
+
+        if cur_settings.ssl_active == true
+            server_url = URI.join("https://#{hostname}","devicemanagement/api/device/connect").to_s
+            checkin_url = URI.join("https://#{hostname}","devicemanagement/api/device/checkin").to_s
+        else
+            server_url = URI.join("http://#{hostname}","devicemanagement/api/device/connect").to_s
+            checkin_url = URI.join("http://#{hostname}","devicemanagement/api/device/checkin").to_s
+        end
+
+        organization = cur_settings.server_organization
+
+        profile_hash = {"PayloadVersion" => 1,
+                        "PayloadContent"=> [
+                                            {"PayloadVersion" => 1,
+                                             "PayloadOrganization" => organization,
+                                             "PayloadIdentifier" => "com.apple.profileservice.credential",
+                                             "PayloadDescription" => "Provides device authentication.",
+                                             "PayloadType" => "com.apple.security.pkcs12",
+                                             "PayloadUUID" => device.reg_cert_uuid,
+                                             "PayloadDisplayName" => "MDM Certificate",
+                                             "PayloadCertificateFileName" => "client.p12",
+                                             "PayloadContent" => BinaryData.new(device.reg_cert),
+                                             "Password" => "password"
+                                            },
+#                                           {"PayloadVersion" => 1,
+#                                             "PayloadOrganization" => organization,
+#                                             "PayloadContent" => {
+#                                                                  "Subject" => [[["CN", "Device Management Identity Certificate"]]],
+#                                                                  "Name" => "Device Management Identity Certificate",
+#                                                                  "Keysize" => 1024,
+#                                                                  "Challenge" => device.scep_challenge,
+#                                                                  "CAFingerprint" => BinaryData.new(fingerprint),
+#                                                                  "URL" => "http://#{scep_host}:1640/",
+#                                                                  "Key Usage" => 0,
+#                                                                  "Key Type" => "RSA"
+#                                                                 },
+#                                             "PayloadIdentifier" => "com.apple.mdmconfig.SCEP",
+#                                             "PayloadDescription" => "Configures SCEP",
+#                                             "PayloadType" => "com.apple.security.scep",
+#                                             "PayloadUUID" => device.scep_uuid,
+#                                             "PayloadDisplayName" => "MDM Server SCEP"
+#                                            },
+#                                            {"PayloadVersion" => 1,
+#                                             "PayloadOrganization" => organization,
+#                                             "PayloadIdentifier" => "com.apple.profileservice.od_root",
+#                                             "PayloadDescription" => "Root certificate for OD server.",
+#                                             "PayloadType" => "com.apple.security.root",
+#                                             "PayloadUUID" => UUID.new.generate,
+#                                             "PayloadDisplayName" => "OD Root Certificate",
+#                                             "PayloadCertificateFileName" => "od_root.cer",
+#                                             "PayloadContent" => BinaryData.new(Base64.encode64(root_cert.to_der))
+#                                            },
+                                            {"ServerURL" => server_url,
+                                             "PayloadVersion" => 1,
+                                             "PayloadOrganization" => organization,
+                                             "CheckInURL" => checkin_url,
+                                             "PayloadIdentifier" => "com.apple.mdmconfig.mdm",
+                                             "PayloadDescription" => "Configures Mobile Device Management",
+                                             "AccessRights" => cur_settings.mdm_acl,
+                                             "Topic" => cur_settings.apns_topic,
+                                             "PayloadType" => "com.apple.mdm",
+                                             "PayloadUUID" => UUID.new.generate,
+                                             "PayloadDisplayName" => "Device Management",
+                                             "IdentityCertificateUUID" => device.reg_cert_uuid#device.scep_uuid
+                                            }
+                                            ],
+                        "PayloadIdentifier" => root_payload_identifier,
+                        "PayloadDescription" => "Allows the server to manage your device.",
+                        "PayloadType" => "Configuration",
+                        "PayloadUUID" => UUID.new.generate,
+                        "PayloadOrganization" => organization,
+                        "PayloadDisplayName" => "Remote Management"
+                       }
+                   
+        servermgr_profiles = Profile.find( :all, :conditions => { :is_from_servermgr => true } )
+
+        puts "Servermgr_profiles: #{servermgr_profiles}"
+
+        if servermgr_profiles != nil && servermgr_profiles.length > 0
+            servermgr_profiles.each do |profile|
+                knob_set_array = profile.knob_sets
+                knob_set_array.each do |knob_set|
+                    if knob_set.class.payload_type != nil && (knob_set.is_for_ios || device.device_type.downcase == "mac")
+                        profile_section = self.generate_profile_section_hash(knob_set, root_payload_identifier)
+                        user = device.user
+                        if user != nil
+                            user_details = OpenDirectory::get_directory_user_details_for_guid(user.guid)
+                            case knob_set.class.to_s
+                            when "EmailKnobSet"
+                                profile_section["IncomingMailServerUsername"] = user_details["short_name"]
+                                profile_section["OutgoingMailServerUsername"] = user_details["short_name"]
+                                profile_section["EmailAddress"] = (user_details["email"] != nil && user_details["email"] != "") ? user_details["email"] : "#{user_details['short_name']}@#{hostname}"
+                            when "CalDavKnobSet"
+                                profile_section["CalDAVUsername"] = user_details["short_name"]
+                                profile_section["CalDAVPrincipalURL"] = "/principals/__uids__/#{user.guid}"
+                            when "CardDavKnobSet"
+                                profile_section["CardDAVUsername"] = user_details["short_name"]
+                            when "IchatKnobSet"
+                                processed_accounts = {}
+                                profile_section["ManagedAccounts"].each do |key, account|
+                                    account["LoginAs"] = "#{user_details['short_name']}@#{hostname}"
+                                    processed_accounts[key] = account
+                                end
+                                profile_section["ManagedAccounts"] = processed_accounts
+                            when "VpnKnobSet"
+                              if profile_section.has_key?("PPP")
+                                  profile_section["PPP"]["AuthName"] = user_details["short_name"]
+                              end
+                              if profile_section.has_key?("IPSec")
+                                profile_section["IPSec"]["XAuthName"] = user_details["short_name"]
+                              end
+                            end
+                        end
+                        profile_hash["PayloadContent"].push(profile_section)
+                    end
+                end
+            end
+        end
+    
+        profile = Plist::Emit.dump(profile_hash)
+
+        if @@signing_cert == nil || @@signing_key == nil
+          cur_settings = Settings.get_settings
+          cert_key_array = ScepHelper::get_signing_certificate(cur_settings.od_master)
+          if cert_key_array != nil && cert_key_array.class == Array
+            @@signing_cert = OpenSSL::X509::Certificate.new(cert_key_array[0])
+            @@signing_key = OpenSSL::PKey::RSA.new(cert_key_array[1])
+          else
+            Rails.logger.warn("Could not find a signing certificate, exporting a raw profile file instead.")
+            return profile
+          end
+        end
+        
+        signed_profile = OpenSSL::PKCS7::sign(@@signing_cert, @@signing_key, profile, [], OpenSSL::PKCS7::BINARY).to_der
+
+        return signed_profile
+    end
+            
+    def self.generate_profile(target, device=nil)
+        knob_set_array = target.knob_sets
+    
+        if knob_set_array == nil
+            return nil
+        end
+        
+        uuid = UUID.new
+        payload_content = []
+
+        root_payload_identifier = target.identifier
+        
+        if target.general_knob_sets != nil && target.general_knob_sets.length > 0
+            general_knob_set = target.general_knob_sets[0]
+                        
+            profile_hash = { "PayloadIdentifier" => root_payload_identifier,
+                             "PayloadRemovalDisallowed" => general_knob_set.security,
+                             "PayloadType" => "Configuration",
+                             "PayloadUUID" => target.uuid,
+                             "PayloadVersion" => 1,
+                             "PayloadDisplayName" => target.name
+                           }
+                           
+            if general_knob_set.description != nil
+                profile_hash["PayloadDescription"] = general_knob_set.description
+            end
+                           
+            if general_knob_set.password != nil && general_knob_set.password.length > 0
+                security_hash = { "PayloadDescription" => "Configures Configuration Profile security",
+                                  "PayloadDisplayName" => "Profile Security",
+                                  "PayloadIdentifier" => "#{root_payload_identifier}.ProfileSecurity",
+                                  "PayloadType" => "com.apple.profileRemovalPassword",
+                                  "PayloadUUID" => uuid.generate,
+                                  "RemovalPassword" => general_knob_set.password,
+                                  "PayloadVersion" => 1
+                                }
+                payload_content.push(security_hash)
+            end
+        else        
+            profile_hash = { "PayloadDisplayName" => target.name,
+                             "PayloadIdentifier" => root_payload_identifier,
+                             "PayloadRemovalDisallowed" => false,
+                             "PayloadType" => "Configuration",
+                             "PayloadUUID" => target.uuid,
+                             "PayloadVersion" => 1
+                           }
+        end
+    
+        knob_set_array.each do |knob_set|
+            if knob_set.class.payload_type != nil && (knob_set.is_for_ios || (device == nil || device.device_type.downcase == "mac"))
+              payload_hash = self.generate_profile_section_hash(knob_set, root_payload_identifier)
+              if payload_hash != nil
+                payload_content.push(payload_hash)
+              end
+            end
+        end
+    
+        profile_hash["PayloadContent"] = payload_content
+        return profile_hash
+    end
+    
+    def self.generate_raw_profile(target, device=nil)
+        profile_hash = self.generate_profile(target, device)
+    
+        if profile_hash == nil
+            return nil
+        end
+        
+        profile_plist = Plist::Emit.dump(profile_hash)
+        return profile_plist
+    end
+    
+    def self.generate_signed_profile(target, device=nil)
+        profile_plist = self.generate_raw_profile(target, device)
+        
+        if profile_plist == nil
+            return nil
+        end
+        
+        if @@signing_cert == nil || @@signing_key == nil
+          cur_settings = Settings.get_settings
+          cert_key_array = ScepHelper::get_signing_certificate(cur_settings.od_master)
+          if cert_key_array != nil && cert_key_array.class == Array
+            @@signing_cert = OpenSSL::X509::Certificate.new(cert_key_array[0])
+            @@signing_key = OpenSSL::PKey::RSA.new(cert_key_array[1])
+          else
+            Rails.logger.warn("Could not find a signing certificate, exporting a raw profile file instead.")
+            return profile_plist
+          end
+        end
+        
+        signed_profile = OpenSSL::PKCS7::sign(@@signing_cert, @@signing_key, profile_plist, [], OpenSSL::PKCS7::BINARY).to_der
+        return signed_profile
+    end
+    
+    def self.generate_profile_section_hash(knob_set, root_payload_identifier)
+      if knob_set.respond_to?(:generate_payload_hash)
+        return knob_set.generate_payload_hash(root_payload_identifier)
+      else
+        if knob_set.respond_to?(:payload_type)
+          payload_type = knob_set.payload_type
+        else
+          payload_type = knob_set.class.payload_type
+        end
+
+        payload_hash = { "PayloadType" => payload_type,
+                         "PayloadVersion" => 1,#knob_set.PayloadVersion,
+                         "PayloadIdentifier" => "#{root_payload_identifier}.#{knob_set.class.payload_subidentifier}",
+                         "PayloadUUID" => knob_set.PayloadUUID,
+                       }
+        
+        if knob_set.class.payload_type == "com.apple.mcx"
+            if knob_set.PayloadDisplayName != nil
+                payload_hash["PayloadDisplayName"] = knob_set.PayloadDisplayName
+            end
+            payload_hash["MCXSettings"] = BinaryData.new(Base64.encode64(knob_set.generate_mcx_settings))
+        else
+            knob_set.attributes.each do |attribute, value|
+                internal_use_flag = "internal_use_flag"
+                if value != nil && !payload_hash.key?(attribute) && attribute.to_s != "id" && attribute[0, internal_use_flag.length] != internal_use_flag &&
+                   attribute != "created_at" && attribute != "updated_at" && !((value.class == Hash || value.class == Array) && value.empty?)
+                    payload_hash[attribute] = value
+                end
+            end
+        end
+        
+        return payload_hash
+      end
+    end
+end

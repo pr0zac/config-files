@@ -1,0 +1,29 @@
+class CreateSecurityKnobSets < ActiveRecord::Migration
+  def self.up
+    create_table :security_knob_sets do |t|
+      t.integer :PayloadVersion
+      t.string :PayloadUUID
+      t.string :PayloadDisplayName
+      
+      t.string :UserDefinedName
+      t.string :PayloadCertificateUUID
+      t.text :EAPClientConfiguration
+      
+      t.string :last_modified_guid
+
+      t.integer :relationship_id
+      t.boolean :deleted, :default => false
+      t.timestamps
+    end
+
+    create_table :interface_knob_sets_security_knob_sets, :force => true, :id => false do |t|
+      t.integer :interface_knob_set_id, :null => false
+      t.integer :security_knob_set_id, :null => false
+    end
+  end
+
+  def self.down
+    drop_table :interface_knob_sets_security_knob_sets
+    drop_table :security_knob_sets
+  end
+end

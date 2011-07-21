@@ -1,0 +1,35 @@
+****************
+Prerequisites
+****************
+Prereqs needed: protobufs, glib, Boost, log4cpp uuid
+
+Linux:
+sudo apt-get install libprotobuf6 libglib2.0-0 libboost-filesystem1.42.0 liblog4cpp5 uuid
+
+OS X:
+sudo port install protobuf-cpp glib2 boost log4cpp +universal
+
+
+****************
+Expresso Server
+****************
+Server is configured in the config/expresso.conf file.
+User accounts are configured in the specified account file, by default config/accounts.
+For testing purposes, account information is stored with plaintext passwords. The account file lines are organized as such:
+<username>:<password>:<directory>
+If directory is blank, the server's configured default directory is used instead.
+
+
+****************
+Expresso Client
+****************
+Client is used to connect to a currently running/listening Expresso Server instance. Its usage is similar to scp:
+./expresso_client zac@192.168.0.120:file.data /tmp/
+More detailed options can be found by running ./expresso_client -h
+
+
+****************
+Limited Preview Restrictions (John made me put this here because he's paranoid)
+****************
+All software included in this package is owned solely by Caffeinated Mind, Inc., is provided for integration and testing purposes by prospective business clients and partners of the owner, and is not to be distributed or transferred in any manner to any other individual or entity unless expressly consented to by the owner.  The right of use for all included software in this package may be revoked at any time by the owner without warning and must be expunged from all systems on request within 48 hours of notice.
+

@@ -1,0 +1,9 @@
+[submodule "libtomcrypt"]
+	path = libtomcrypt
+	url = git@github.com:libtom/libtomcrypt.git
+[submodule "tomsfastmath"]
+	path = tomsfastmath
+	url = git@github.com:libtom/tomsfastmath.git
+[submodule "libtommath"]
+	path = libtommath
+	url = git@github.com:libtom/libtommath.git

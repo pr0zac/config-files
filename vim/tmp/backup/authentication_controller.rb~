@@ -1,0 +1,41 @@
+class AuthenticationController < ApplicationController
+    before_filter :verify_device_auth_token
+    skip_before_filter :verify_auth_token, :verify_admin_logged_in, :only => [:logout, :not_authorized, :device_callback]
+    skip_before_filter :verify_device_auth_token, :only => [:logout, :not_authorized, :callback]
+    skip_before_filter :verify_post, :only => [:callback, :device_callback, :not_authorized]
+    skip_before_filter :verify_not_timed_out, :only => [:callback, :device_callback]
+
+    def callback
+        cur_settings = Settings.get_settings
+        if cur_settings.ssl_active == true
+            admin_application_url = "https://#{request.host}/iDeploy/"
+        else
+            admin_application_url = "http://#{request.host}/iDeploy/"
+        end
+
+        redirect_to_full_url(admin_application_url, 302)
+    end
+
+    def device_callback
+        cur_settings = Settings.get_settings
+        if cur_settings.ssl_active == true
+            device_application_url = "https://#{request.host}/profiles/"
+        else
+            device_application_url = "http://#{request.host}/profiles/"
+        end
+
+        redirect_to_full_url(device_application_url, 302)
+    end
+
+    def not_authorized
+        logout_admin
+    end
+
+    def logout
+        logout_admin
+    end
+    
+    def user_logout
+        logout_user
+    end
+end

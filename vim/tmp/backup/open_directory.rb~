@@ -1,0 +1,660 @@
+OSX.require_framework '/System/Library/Frameworks/OpenDirectory.framework'
+
+class OpenDirectory
+    # --------------------------------------------------------------------------------------------
+    # Constants from the various DirectoryService/OpenDirectory Obj-C header files are listed here
+    #
+    # TODO: We should enable 'BridgeSupport' for the frameworks we require constants from, 
+    # but we've not been able to do that yet.
+    # --------------------------------------------------------------------------------------------
+    ODNodeTypeLocalNodes            = 0x2200
+    ODTypeAuthenticationSearchNode  = 0x2201                # node type for the OD authentication search node (from CFOpenDirectoryConsts.h)
+    ODTypeContactSearchNode         = 0x2204                # node type for the OD contacts search node (from CFOpenDirectoryConsts.h)
+
+    ODMatchAny                      = 0x0001
+    ODMatchEqualTo                  = 0x2001			          #eDSExact (all of these from CFOpenDirectoryConsts.h)
+    ODMatchBeginsWith               = 0x2002			          #eDSStartsWith
+    ODMatchEndsWith                 = 0x2003			          #eDSEndsWith
+    ODMatchContains                 = 0x2004			          #eDSContains
+    ODMatchInsensitiveEqualTo       = 0x2101			          #eDSiExact
+    ODMatchInsensitiveBeginsWith    = 0x2102			          #eDSiStartsWith
+    ODMatchInsensitiveEndsWith      = 0x2103			          #eDSiEndsWith
+    ODMatchInsensitiveContains      = 0x2104			          #eDSiContains
+    ODMatchGreaterThan              = 0x2006			          #eDSGreaterThan
+    ODMatchLessThan                 = 0x2007			          #eDSLessThan
+    ODMatchCompoundExpression       = 0x200B                #eDSCompoundExpression
+
+    # Record type constants from DirectoryServices framework: DirServicesConst.h
+    DSStdRecordTypeUsers					  = 'dsRecTypeStandard:Users'
+    DSStdRecordTypeGroups					  = 'dsRecTypeStandard:Groups'
+    DSStdRecordTypeComputers                  = 'dsRecTypeStandard:Computers'
+    DSStdRecordTypeComputerGroups             = 'dsRecTypeStandard:ComputerGroups'
+    
+
+    # User Record attribute constants from DirectoryServices framework: DirServicesConst.h
+    DS1AttrGeneratedUID             = 'dsAttrTypeStandard:GeneratedUID'
+    DSNAttrRecordName						    = 'dsAttrTypeStandard:RecordName'
+    DS1AttrDistinguishedName				= 'dsAttrTypeStandard:RealName'
+    DS1AttrFirstName						    = 'dsAttrTypeStandard:FirstName'
+    DS1AttrLastName						      = 'dsAttrTypeStandard:LastName'
+    DSNAttrEMailAddress					    = 'dsAttrTypeStandard:EMailAddress'
+    DSNAttrJPEGPhoto  					    = 'dsAttrTypeStandard:JPEGPhoto'
+    DSNAttrJobTitle  					      = 'dsAttrTypeStandard:JobTitle'
+    DSNAttrMobileNumber  					  = 'dsAttrTypeStandard:MobileNumber'
+    DS1AttrUniqueID                           = 'dsAttrTypeStandard:UniqueID'
+    
+    # User Group Record specific attribute constants
+    DSNAttrGroupMembership            = "dsAttrTypeStandard:GroupMembership"
+    DSNAttrGroupMembers          = "dsAttrTypeStandard:GroupMembers"
+    DS1AttrPrimaryGroupID             = "dsAttrTypeStandard:PrimaryGroupID"
+    DSNAttrNestedGroups                    = "dsAttrTypeStandard:NestedGroups"
+    
+    # Computer Record specific attribute constants
+    DSNAttrENetAddress              = "dsAttrTypeStandard:ENetAddress"
+    
+    # MCX specific attribute constants
+    DSNAttrMCXSettings                 = "dsAttrTypeStandard:MCXSettings"
+    
+    AttributeToShortName = {"dsAttrTypeStandard:GeneratedUID" => "guid",
+                            "dsAttrTypeStandard:RecordName" => "short_name",
+                            "dsAttrTypeStandard:RealName" => "full_name",
+                            "dsAttrTypeStandard:FirstName" => "first_name",
+                            "dsAttrTypeStandard:LastName" => "last_name",
+                            "dsAttrTypeStandard:EMailAddress" => "email",
+                            "dsAttrTypeStandard:JPEGPhoto" => "jpeg_data",
+                            "dsAttrTypeStandard:JobTitle" => "job_title",
+                            "dsAttrTypeStandard:MobileNumber" => "mobile_phone",
+                            "dsAttrTypeStandard:GroupMembership" => "group_membership",
+                            "dsAttrTypeStandard:GroupMembers" => "group_members",
+                            "dsAttrTypeStandard:PrimaryGroupID" => "primary_group_id",
+                            "dsAttrTypeStandard:UniqueID" => "uid",
+                            "dsAttrTypeStandard:NestedGroups" => "sub_groups",
+                            "dsAttrTypeStandard:MCXSettings" => "mcx_settings",
+                            "dsAttrTypeStandard:ENetAddress" => "enet_address"}
+                            
+    ShortNameToAttribute = {"guid" => "dsAttrTypeStandard:GeneratedUID",
+                            "short_name" => "dsAttrTypeStandard:RecordName",
+                            "full_name" => "dsAttrTypeStandard:RealName",
+                            "first_name" => "dsAttrTypeStandard:FirstName",
+                            "last_name" => "dsAttrTypeStandard:LastName",
+                            "email" => "dsAttrTypeStandard:EMailAddress",
+                            "jpeg_data" => "dsAttrTypeStandard:JPEGPhoto",
+                            "job_title" => "dsAttrTypeStandard:JobTitle",
+                            "mobile_phone" => "dsAttrTypeStandard:MobileNumber",
+                            "group_membership" => "dsAttrTypeStandard:GroupMembership",
+                            "group_members" => "dsAttrTypeStandard:GroupMembers",
+                            "primary_group_id" => "dsAttrTypeStandard:PrimaryGroupID",
+                            "uid" => "dsAttrTypeStandard:UniqueID",
+                            "sub_groups" => "dsAttrTypeStandard:NestedGroups",
+                            "mcx_settings" => "dsAttrTypeStandard:MCXSettings",
+                            "enet_address" => "dsAttrTypeStandard:ENetAddress"}
+                            
+    # --------------------------------------------------------------------------------------------
+    
+    
+    def self.authenticate(username, password)
+        session = OSX::ODSession.defaultSession
+        auth_search_node = OSX::ODNode.nodeWithSession_type_error(session, ODTypeAuthenticationSearchNode, nil)
+        requestedAttributes = [DS1AttrGeneratedUID]
+        user = auth_search_node.recordWithRecordType_name_attributes_error(DSStdRecordTypeUsers, username, requestedAttributes, nil)
+        if user != nil && user.verifyPassword_error(password, nil)
+            return value_for_multi_attribute(user.valueForKey(DS1AttrGeneratedUID))
+        else
+            return nil
+        end
+    end
+    
+    
+    def self.get_directory_computers(attributes = ["guid"], max_results = 0)
+        return_attrs = []
+        
+        for attribute in attributes
+            return_attrs.push(ShortNameToAttribute[attribute])
+        end
+
+        session = OSX::ODSession.defaultSession
+        contact_search_node = OSX::ODNode.nodeWithSession_type_error(session, ODTypeAuthenticationSearchNode, nil)    
+
+        query = OSX::ODQuery.queryWithNode_forRecordTypes_attribute_matchType_queryValues_returnAttributes_maximumResults_error(contact_search_node,
+                                DSStdRecordTypeComputers, nil, ODMatchAny, nil, return_attrs, max_results, nil)
+
+        raw_results = query.resultsAllowingPartial_error(false, nil)
+
+        record_array = []
+
+        for user_result in raw_results            
+            record_hash = {}            
+            for attribute in return_attrs
+                record_hash[AttributeToShortName[attribute]] = value_for_multi_attribute(user_result.valueForKey(attribute))
+            end
+            
+            record_array.push(record_hash)
+        end
+
+        return record_array
+    end
+    
+    def self.get_directory_computer_groups(attributes = ["guid"], max_results = 0)
+        return_attrs = []
+        
+        for attribute in attributes
+            return_attrs.push(ShortNameToAttribute[attribute])
+        end
+
+        session = OSX::ODSession.defaultSession
+        contact_search_node = OSX::ODNode.nodeWithSession_type_error(session, ODTypeAuthenticationSearchNode, nil)    
+
+        query = OSX::ODQuery.queryWithNode_forRecordTypes_attribute_matchType_queryValues_returnAttributes_maximumResults_error(contact_search_node,
+                                DSStdRecordTypeComputerGroups, nil, ODMatchAny, nil, return_attrs, max_results, nil)
+
+        raw_results = query.resultsAllowingPartial_error(false, nil)
+
+        record_array = []
+
+        for user_result in raw_results
+            record_hash = {}            
+            for attribute in return_attrs
+                record_hash[AttributeToShortName[attribute]] = value_for_multi_attribute(user_result.valueForKey(attribute))
+            end
+            
+            record_array.push(record_hash)
+        end
+
+        return record_array
+    end
+    
+    def self.get_directory_user_details_for_guid(guid)
+        return_attrs = [DS1AttrGeneratedUID, DSNAttrRecordName, DS1AttrFirstName, DS1AttrLastName, DSNAttrEMailAddress,  DSNAttrJobTitle, DSNAttrMobileNumber, DS1AttrUniqueID]
+
+        session = OSX::ODSession.defaultSession
+        contact_search_node = OSX::ODNode.nodeWithSession_type_error(session, ODTypeAuthenticationSearchNode, nil)    
+
+        query = OSX::ODQuery.queryWithNode_forRecordTypes_attribute_matchType_queryValues_returnAttributes_maximumResults_error(contact_search_node,
+                                DSStdRecordTypeUsers, DS1AttrGeneratedUID, ODMatchEqualTo, guid, return_attrs, 1, nil)
+
+        raw_results = query.resultsAllowingPartial_error(false, nil)
+        
+        results_hash = {}
+        
+        if raw_results.count == 1
+            for attribute in return_attrs
+                results_hash[AttributeToShortName[attribute]] = value_for_multi_attribute(raw_results[0].valueForKey(attribute))
+            end
+        end
+
+        return results_hash
+    end
+    
+    def self.get_directory_computer_details_for_guid(guid)
+        return_attrs = [DS1AttrGeneratedUID, DSNAttrRecordName, DSNAttrENetAddress]
+
+        session = OSX::ODSession.defaultSession
+        contact_search_node = OSX::ODNode.nodeWithSession_type_error(session, ODTypeAuthenticationSearchNode, nil)    
+
+        query = OSX::ODQuery.queryWithNode_forRecordTypes_attribute_matchType_queryValues_returnAttributes_maximumResults_error(contact_search_node,
+                                DSStdRecordTypeComputers, DS1AttrGeneratedUID, ODMatchEqualTo, guid, return_attrs, 1, nil)
+
+        raw_results = query.resultsAllowingPartial_error(false, nil)
+        
+        results_hash = {}
+        
+        if raw_results.count == 1
+            for attribute in return_attrs
+                results_hash[AttributeToShortName[attribute]] = value_for_multi_attribute(raw_results[0].valueForKey(attribute))
+            end
+        end
+
+        return results_hash
+    end
+
+    def self.get_directory_users(attributes = ["guid"], max_results = 0)
+        return_attrs = []
+        
+        for attribute in attributes
+            return_attrs.push(ShortNameToAttribute[attribute])
+        end
+
+        return_attrs.push(DS1AttrUniqueID, DSNAttrRecordName)
+
+        session = OSX::ODSession.defaultSession
+        contact_search_node = OSX::ODNode.nodeWithSession_type_error(session, ODTypeAuthenticationSearchNode, nil)    
+
+        query = OSX::ODQuery.queryWithNode_forRecordTypes_attribute_matchType_queryValues_returnAttributes_maximumResults_error(contact_search_node,
+                                DSStdRecordTypeUsers, nil, ODMatchAny, nil, return_attrs, max_results, nil)
+
+        raw_results = query.resultsAllowingPartial_error(false, nil)
+
+        record_array = []
+
+        for user_result in raw_results
+            if user_result.valueForKey(DS1AttrGeneratedUID) == nil || user_result.valueForKey(DS1AttrGeneratedUID) == ""
+                next
+            end
+            
+            uid = Integer(value_for_multi_attribute(user_result.valueForKey(DS1AttrUniqueID)))
+            short_name = value_for_multi_attribute(user_result.valueForKey(DSNAttrRecordName))
+            if uid < 500 || short_name == "diradmin" || short_name[0..0] == "_"
+                next
+            end
+            
+            if !attributes.include?("uid")
+                return_attrs.delete(DS1AttrUniqueID)
+            end
+            
+            if !attributes.include?("short_name")
+                return_attrs.delete(DSNAttrRecordName)
+            end
+            
+            record_hash = {}            
+            for attribute in return_attrs
+                record_hash[AttributeToShortName[attribute]] = value_for_multi_attribute(user_result.valueForKey(attribute))
+            end
+            
+            record_array.push(record_hash)
+        end
+
+        return record_array
+    end
+    
+    def self.search_directory_for_users_matching(search_string, max_results = 0)
+        return_attrs = [DS1AttrGeneratedUID, DS1AttrUniqueID, DSNAttrRecordName]
+
+        session = OSX::ODSession.defaultSession
+        contact_search_node = OSX::ODNode.nodeWithSession_type_error(session, ODTypeAuthenticationSearchNode, nil)    
+
+        record_hashs = {}
+
+        search_types = [DSNAttrRecordName, DS1AttrGeneratedUID, DS1AttrDistinguishedName, DS1AttrFirstName, DS1AttrLastName, DSNAttrEMailAddress, DSNAttrJobTitle]
+        
+        for search_type in search_types
+            search_return_attrs = return_attrs | [search_type]
+            
+            query = OSX::ODQuery.queryWithNode_forRecordTypes_attribute_matchType_queryValues_returnAttributes_maximumResults_error(contact_search_node,
+                                    DSStdRecordTypeUsers, search_type, ODMatchInsensitiveContains, search_string, search_return_attrs, max_results, nil)
+
+            raw_results = query.resultsAllowingPartial_error(false, nil)
+            
+            for user_result in raw_results
+                if user_result.valueForKey(DS1AttrGeneratedUID) == nil || user_result.valueForKey(DS1AttrGeneratedUID) == ""
+                    next
+                end
+                
+                uid = Integer(value_for_multi_attribute(user_result.valueForKey(DS1AttrUniqueID)))
+                short_name = value_for_multi_attribute(user_result.valueForKey(DSNAttrRecordName))
+                if uid < 500 || short_name == "diradmin" || short_name[0..0] == "_"
+                    next
+                end
+                
+                guid = value_for_multi_attribute(user_result.valueForKey(DS1AttrGeneratedUID))
+                
+                if !record_hashs.key?(guid)
+                    record_hashs[guid] = {"guid" => guid}
+                end
+            end
+        end
+
+        record_array = []
+
+        record_hashs.each do |guid, hash|
+            record_array.push(hash)
+        end
+
+        return record_array
+    end
+    
+    def self.create_user_model_for_guid(guid)
+        user_result = self.get_directory_user_details_for_guid(guid)
+
+        if user_result != nil
+            user = User.new(:guid=>guid)
+            user.save
+            return user
+        else
+            return nil
+        end
+    end
+    
+    def self.get_directory_user_group_details_for_guid(guid, node=ODTypeAuthenticationSearchNode)
+        return_attrs = [DS1AttrGeneratedUID, DSNAttrRecordName, DSNAttrGroupMembership, DSNAttrGroupMembers, DS1AttrPrimaryGroupID, DS1AttrDistinguishedName, DSNAttrNestedGroups]
+
+        session = OSX::ODSession.defaultSession
+        contact_search_node = OSX::ODNode.nodeWithSession_type_error(session, node, nil)    
+
+        query = OSX::ODQuery.queryWithNode_forRecordTypes_attribute_matchType_queryValues_returnAttributes_maximumResults_error(contact_search_node,
+                                DSStdRecordTypeGroups, DS1AttrGeneratedUID, ODMatchEqualTo, guid, return_attrs, 1, nil)
+
+        raw_results = query.resultsAllowingPartial_error(false, nil)
+        
+        results_hash = {}
+        
+        if raw_results.count == 1
+            for attribute in return_attrs
+                if [DSNAttrGroupMembership,DSNAttrGroupMembers,DSNAttrNestedGroups].include?(attribute)
+                    return_array = []
+                    entry_array = raw_results[0].valueForKey(attribute)
+                    if entry_array != nil
+                        entry_array.each do |entry|
+                            return_array.push(entry.to_s)
+                        end
+                    end
+                    results_hash[AttributeToShortName[attribute]] = return_array
+                else
+                    results_hash[AttributeToShortName[attribute]] = value_for_multi_attribute(raw_results[0].valueForKey(attribute))
+                end
+            end
+        end
+
+        return results_hash
+    end
+    
+    def self.get_directory_user_group_details_for_record_name(user_group_record_name, node=ODTypeAuthenticationSearchNode)
+        return_attrs = [DS1AttrGeneratedUID, DSNAttrRecordName, DSNAttrGroupMembership, DSNAttrGroupMembers, DS1AttrPrimaryGroupID, DS1AttrDistinguishedName]
+
+        session = OSX::ODSession.defaultSession
+        contact_search_node = OSX::ODNode.nodeWithSession_type_error(session, node, nil)    
+
+        query = OSX::ODQuery.queryWithNode_forRecordTypes_attribute_matchType_queryValues_returnAttributes_maximumResults_error(contact_search_node,
+                                DSStdRecordTypeGroups, DSNAttrRecordName, ODMatchEqualTo, user_group_record_name, return_attrs, 1, nil)
+
+        raw_results = query.resultsAllowingPartial_error(false, nil)
+        
+        results_hash = nil
+        
+        if raw_results.count >= 1
+            results_hash = {}
+            
+            for attribute in return_attrs
+                results_hash[AttributeToShortName[attribute]] = value_for_multi_attribute(raw_results[0].valueForKey(attribute))
+            end
+        end
+
+        return results_hash
+    end    
+    
+    def self.get_directory_user_groups(attributes = ["guid"], max_results = 0)
+        return_attrs = []
+        
+        for attribute in attributes
+            return_attrs.push(ShortNameToAttribute[attribute])
+        end
+        
+        return_attrs.push(DS1AttrPrimaryGroupID, DSNAttrRecordName)
+
+        session = OSX::ODSession.defaultSession
+        contact_search_node = OSX::ODNode.nodeWithSession_type_error(session, ODTypeAuthenticationSearchNode, nil)    
+
+        query = OSX::ODQuery.queryWithNode_forRecordTypes_attribute_matchType_queryValues_returnAttributes_maximumResults_error(contact_search_node,
+                                DSStdRecordTypeGroups, nil, ODMatchAny, nil, return_attrs, max_results, nil)
+
+        raw_results = query.resultsAllowingPartial_error(false, nil)
+
+        record_array = []
+
+        for group_result in raw_results
+            if group_result.valueForKey(DS1AttrGeneratedUID) == nil || group_result.valueForKey(DS1AttrGeneratedUID) == "" ||
+                    group_result.valueForKey(DS1AttrPrimaryGroupID) == nil || group_result.valueForKey(DS1AttrPrimaryGroupID) == ""
+                next
+            end
+            
+            gid = Integer(value_for_multi_attribute(group_result.valueForKey(DS1AttrPrimaryGroupID)))
+            short_name = value_for_multi_attribute(group_result.valueForKey(DSNAttrRecordName))
+            if gid < 500 || short_name[0..0] == "_" || short_name[0..9] == "com.apple."
+                next
+            end
+            
+            if !attributes.include?("primary_group_id")
+                return_attrs.delete(DS1AttrPrimaryGroupID)
+            end
+            
+            if !attributes.include?("short_name")
+                return_attrs.delete(DSNAttrRecordName)
+            end
+            
+            record_hash = {}
+            
+            for attribute in return_attrs
+                record_hash[AttributeToShortName[attribute]] = value_for_multi_attribute(group_result.valueForKey(attribute))
+            end
+            
+            record_array.push(record_hash)
+        end
+
+        return record_array
+    end
+
+    def self.search_directory_for_user_groups_matching(search_string, max_results = 0)
+        return_attrs = [DS1AttrGeneratedUID, DS1AttrPrimaryGroupID, DSNAttrRecordName]
+
+        session = OSX::ODSession.defaultSession
+        contact_search_node = OSX::ODNode.nodeWithSession_type_error(session, ODTypeAuthenticationSearchNode, nil)    
+
+        record_hashs = {}
+
+        search_types = [DS1AttrGeneratedUID, DSNAttrRecordName, DSNAttrGroupMembership, DSNAttrGroupMembers, DS1AttrPrimaryGroupID]
+        
+        for search_type in search_types
+            search_return_attrs = return_attrs | [search_type]
+            
+            query = OSX::ODQuery.queryWithNode_forRecordTypes_attribute_matchType_queryValues_returnAttributes_maximumResults_error(contact_search_node,
+                                    DSStdRecordTypeGroups, search_type, ODMatchInsensitiveContains, search_string, search_return_attrs, max_results, nil)
+
+            raw_results = query.resultsAllowingPartial_error(false, nil)
+            
+            for group_result in raw_results
+                if group_result.valueForKey(DS1AttrGeneratedUID) == nil || group_result.valueForKey(DS1AttrGeneratedUID) == "" ||
+                        group_result.valueForKey(DS1AttrPrimaryGroupID) == nil || group_result.valueForKey(DS1AttrPrimaryGroupID) == ""
+                    next
+                end
+
+                gid = Integer(value_for_multi_attribute(group_result.valueForKey(DS1AttrPrimaryGroupID)))
+                short_name = value_for_multi_attribute(group_result.valueForKey(DSNAttrRecordName))
+                if gid < 500 || short_name[0..0] == "_" || short_name[0..9] == "com.apple."
+                    next
+                end
+                
+                guid = value_for_multi_attribute(group_result.valueForKey(DS1AttrGeneratedUID))
+                
+                if !record_hashs.key?(guid)
+                    record_hashs[guid] = {"guid" => guid}
+                end
+                
+            end
+        end
+
+        record_array = []
+
+        record_hashs.each do |guid, hash|
+            record_array.push(hash)
+        end
+
+        return record_array
+    end
+    
+    def self.search_directory_for_user_groups_containing_user_guid(guid, attributes = ["guid"])
+        return_attrs = []
+
+        for attribute in attributes
+            return_attrs.push(ShortNameToAttribute[attribute])
+        end
+        
+        return_attrs.push(DS1AttrPrimaryGroupID, DSNAttrRecordName)
+        
+        session = OSX::ODSession.defaultSession
+        contact_search_node = OSX::ODNode.nodeWithSession_type_error(session, ODTypeAuthenticationSearchNode, nil)    
+                
+        query = OSX::ODQuery.queryWithNode_forRecordTypes_attribute_matchType_queryValues_returnAttributes_maximumResults_error(contact_search_node,
+                                                DSStdRecordTypeGroups, DSNAttrGroupMembers, ODMatchInsensitiveContains, guid, return_attrs, 0, nil)
+
+        raw_results = query.resultsAllowingPartial_error(false, nil)
+        
+        record_array = []
+        
+        for group_result in raw_results
+            if group_result.valueForKey(DS1AttrGeneratedUID) == nil || group_result.valueForKey(DS1AttrGeneratedUID) == "" ||
+                    group_result.valueForKey(DS1AttrPrimaryGroupID) == nil || group_result.valueForKey(DS1AttrPrimaryGroupID) == ""
+                next
+            end
+            
+            gid = Integer(value_for_multi_attribute(group_result.valueForKey(DS1AttrPrimaryGroupID)))
+            short_name = value_for_multi_attribute(group_result.valueForKey(DSNAttrRecordName))
+            if gid < 500 || short_name[0..0] == "_" || short_name[0..9] == "com.apple."
+                next
+            end
+            
+            if !attributes.include?("primary_group_id")
+                return_attrs.delete(DS1AttrPrimaryGroupID)
+            end
+            
+            if !attributes.include?("short_name")
+                return_attrs.delete(DSNAttrRecordName)
+            end
+            
+            record_hash = {}
+            
+            for attribute in return_attrs
+                record_hash[AttributeToShortName[attribute]] = value_for_multi_attribute(group_result.valueForKey(attribute))
+            end
+            
+            record_array.push(record_hash)
+        end
+        
+        return record_array
+    end
+
+    def self.search_directory_for_user_groups_containing_user_group_guid(guid, attributes = ["guid"])
+        return_attrs = []
+
+        for attribute in attributes
+            return_attrs.push(ShortNameToAttribute[attribute])
+        end
+        
+        return_attrs.push(DS1AttrPrimaryGroupID, DSNAttrRecordName)
+        
+        session = OSX::ODSession.defaultSession
+        contact_search_node = OSX::ODNode.nodeWithSession_type_error(session, ODTypeAuthenticationSearchNode, nil)    
+                
+        query = OSX::ODQuery.queryWithNode_forRecordTypes_attribute_matchType_queryValues_returnAttributes_maximumResults_error(contact_search_node,
+                                                DSStdRecordTypeGroups, DSNAttrNestedGroups, ODMatchInsensitiveContains, guid, return_attrs, 0, nil)
+
+        raw_results = query.resultsAllowingPartial_error(false, nil)
+        
+        record_array = []
+        
+        for group_result in raw_results
+            if group_result.valueForKey(DS1AttrGeneratedUID) == nil || group_result.valueForKey(DS1AttrGeneratedUID) == "" ||
+                    group_result.valueForKey(DS1AttrPrimaryGroupID) == nil || group_result.valueForKey(DS1AttrPrimaryGroupID) == ""
+                next
+            end
+            
+            gid = Integer(value_for_multi_attribute(group_result.valueForKey(DS1AttrPrimaryGroupID)))
+            short_name = value_for_multi_attribute(group_result.valueForKey(DSNAttrRecordName))
+            if gid < 500 || short_name[0..0] == "_" || short_name[0..9] == "com.apple."
+                next
+            end
+            
+            if !attributes.include?("primary_group_id")
+                return_attrs.delete(DS1AttrPrimaryGroupID)
+            end
+            
+            if !attributes.include?("short_name")
+                return_attrs.delete(DSNAttrRecordName)
+            end
+            
+            record_hash = {}
+            
+            for attribute in return_attrs
+                record_hash[AttributeToShortName[attribute]] = value_for_multi_attribute(group_result.valueForKey(attribute))
+            end
+            
+            record_array.push(record_hash)
+        end
+        
+        return record_array
+    end
+    
+    def self.create_user_group_model_for_guid(guid)
+        user_group_result = self.get_directory_user_group_details_for_guid(guid)
+
+        if user_group_result != nil
+            user_group = UserGroup.new(:guid=>guid)
+            user_group.save
+            return user_group
+        else
+            return nil
+        end
+    end
+
+    def self.value_for_multi_attribute(value)
+        if value.class == OSX::NSArray
+            if value.count > 0
+            #     return_array = []
+            #     value.each do |entry|
+            #         return_array.push(entry.to_s)
+            #     end
+            #     return return_array
+            # elsif value.count == 1
+                return value[0].to_s
+            else
+                return nil
+            end
+        else
+            return value.to_s
+        end
+    end
+    
+    def self.lookupRecordByGUID(guid, type, node)
+      session = OSX::ODSession.defaultSession
+      authSearchNode = OSX::ODNode.nodeWithSession_type_error(session, node, nil)
+
+      query = OSX::ODQuery.queryWithNode_forRecordTypes_attribute_matchType_queryValues_returnAttributes_maximumResults_error(
+        authSearchNode, type, DS1AttrGeneratedUID, ODMatchEqualTo, guid, nil, 1, nil)
+
+      results = query.resultsAllowingPartial_error(false, nil)
+      results[0]
+    end
+
+    def self.lookupUserByGUID(user_guid, node)
+      lookupRecordByGUID(user_guid, DSStdRecordTypeUsers, node)
+    end
+
+    def self.lookupGroupByGUID(group_guid, node)
+      lookupRecordByGUID(group_guid, DSStdRecordTypeGroups, node)
+    end
+
+    def self.lookupRecordByName(name, type, node)
+        session = OSX::ODSession.defaultSession
+        auth_search_node = OSX::ODNode.nodeWithSession_type_error(session, node, nil)    
+
+        query = OSX::ODQuery.queryWithNode_forRecordTypes_attribute_matchType_queryValues_returnAttributes_maximumResults_error(auth_search_node,
+                                type, DSNAttrRecordName, ODMatchEqualTo, name, nil, 1, nil)
+        
+        results = query.resultsAllowingPartial_error(false, nil)
+        results[0]
+    end
+
+    def self.lookupGroupByName(group_name, node)
+      lookupRecordByName(group_name, DSStdRecordTypeGroups, node)
+    end
+
+    def self.is_member(group_guid, user_guid)
+      userRecord = lookupUserByGUID(user_guid, ODTypeAuthenticationSearchNode)
+      groupRecord = lookupGroupByGUID(group_guid, ODTypeAuthenticationSearchNode)
+      groupRecord.isMemberRecord_error(userRecord, nil)
+    end
+    
+    def self.is_user_an_admin(user_guid)
+      adminGroupGuid = 'ABCDEFAB-CDEF-ABCD-EFAB-CDEF00000050'
+      is_member(adminGroupGuid, user_guid)
+    end
+
+    def self.is_user_allowed(user_guid)
+      adminGroupName = 'com.apple.access_devicemanagement'
+      userRecord = lookupUserByGUID(user_guid, ODTypeAuthenticationSearchNode)
+      groupRecord = lookupGroupByName(adminGroupName, ODTypeAuthenticationSearchNode)
+      if groupRecord != nil
+          return groupRecord.isMemberRecord_error(userRecord, nil)
+      else
+          return true
+      end
+    end
+end

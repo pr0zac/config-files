@@ -1,0 +1,37 @@
+class SettingsController < CrudController
+    def get_settings
+        result = SettingsHelper.get_settings
+        render :json => { :result => result }        
+    end
+    
+    def set_mdm_acl
+        post_data = request.body.read
+        incoming_request = JSON.parse(post_data)
+        result = SettingsHelper.set_mdm_acl(incoming_request)
+        render :json => { :result => result }
+    end
+
+    def set_email_account
+        post_data = request.body.read
+        incoming_request = JSON.parse(post_data)
+        result = SettingsHelper.set_email_account(incoming_request)
+        render :json => { :result => result }
+    end
+    
+    def set_od_master
+        post_data = request.body.read
+        incoming_request = JSON.parse(post_data)
+        result = SettingsHelper.set_od_master(incoming_request)
+        render :json => { :result => result }
+    end
+    
+    def get_version
+        version_file = File.open('VERSION', 'r')
+        version_number = version_file.read.strip
+        render :json => { :result => { :version => version_number } }
+    end
+
+    def get_csrf_token
+      render :json => { :token => session[:_csrf_token] } #form_authenticity_token }
+    end
+end

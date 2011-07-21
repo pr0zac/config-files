@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+	<title>Sendoid - Instant, Private, P2P File Transfers</title>
+	<meta content="IE=8" http-equiv="X-UA-Compatible" />
+	<meta NAME="Title" CONTENT="Sendoid - Instant, Private, P2P File Transfers" />
+	<meta NAME="keywords" CONTENT="sendoid,isendr,secure,p2p,direct connect,send,send file,large file,transfer,dc,upload" />
+	<meta NAME="description" CONTENT="Send a file instantly and securely with SENDOID file transfer. Sendoid lets you send files to anyone with an internet connection via an on-demand peer-to-peer direct connection for free! Your file goes straight from you to its destination-- no server space required." />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	
+	<link rel="icon" href="favicon.ico" type="image/x-icon"> 
+	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+	
+	<link href="stylesheets/custom-theme/jquery-ui-1.8.10.custom.css" rel="stylesheet" type="text/css" media="screen">
+	<link href="stylesheets/sendoid.css" rel="stylesheet" type="text/css" media="screen">
+	<!--[if IE]>
+	<link href="stylesheets/sendoid_iehacks.css" rel="stylesheet" type="text/css" media="screen">
+	<![endif]-->
+	
+	<script type="text/javascript" src="/javascripts/jquery-1.4.4.min.js"></script>
+	<script type="text/javascript" src="/javascripts/jquery-ui-1.8.10.custom.min.js"></script>
+	<script type="text/javascript" src="/javascripts/jquery.timers-1.2.js"></script>
+	<script type="text/javascript" src="/javascripts/jquery.json-2.2.js"></script>
+	<script type="text/javascript" src="/javascripts/konami_v10.js"></script>
+	<script type="text/javascript" src="/javascripts/swfobject.js"></script>
+	<script type="text/javascript" src="/javascripts/file_uploader_v10.js"></script>
+	<script type="text/javascript" src="/javascripts/sendoid.js"></script>
+
+    <meta name="author" content="Caffeinated Mind, Inc.">
+    <meta name="publisher" content="Caffeinated Mind, Inc.">
+    <meta name="copyright" content="Caffeinated Mind, Inc.">
+    <meta name="robots" content="ALL">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta name="revisit-after" content="60 days">
+    
+    <script type="text/javascript">
+		var mpq = [];
+		mpq.push(["init", "YOUR TOKEN"]);
+		(function() {
+		var mp = document.createElement("script"); mp.type = "text/javascript"; mp.async = true;
+		mp.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + "//api.mixpanel.com/site_media/js/api/mixpanel.js";
+		var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(mp, s);
+		})();
+	</script>
+	
+	<script type="text/javascript">
+		var ISCurrentVersion = "46";
+	</script> 
+    
+</head>
+<body>
+<%= yield %>
+</body>
+</html>

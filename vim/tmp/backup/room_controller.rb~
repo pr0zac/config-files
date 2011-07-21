@@ -1,0 +1,32 @@
+class RoomController < ApplicationController
+  def create_room
+    room_name = params[:id]
+
+    am = RTC::AccountManager.new("http://connectnow.acrobat.com/caffeinatedmind")
+    am.login("admin@caffeinatedmind.com","qwertyfonz")
+    am.keepalive("admin@caffeinatedmind.com","qwertyfonz")
+    am.createRoom(room_name)
+
+    render :text => "", :status => 200
+  end
+
+  def delete_room
+    room_name = params[:id]
+
+    am = RTC::AccountManager.new("http://connectnow.acrobat.com/caffeinatedmind")
+    am.login("admin@caffeinatedmind.com","qwertyfonz")
+    am.keepalive("admin@caffeinatedmind.com","qwertyfonz")
+    am.deleteRoom(room_name)
+
+    render :text => "", :status => 200
+  end
+
+  def list_rooms
+    am = RTC::AccountManager.new("http://connectnow.acrobat.com/caffeinatedmind")
+    am.login("admin@caffeinatedmind.com","qwertyfonz")
+    am.keepalive("admin@caffeinatedmind.com","qwertyfonz")
+    room_list = am.listRooms().collect{|room| room.name}.join(
+
+    render :text => room_list, :status => 200
+  end
+end

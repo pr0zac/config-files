@@ -1,0 +1,10 @@
+# Changing user information for zac.
+# Use "passwd" to change the password.
+##
+# Open Directory: /Local/Default
+##
+Shell: /bin/zsh
+Full Name: zac
+Office Location: 
+Office Phone: 
+Home Phone: 

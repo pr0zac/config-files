@@ -2,4 +2,4 @@ if [ -z "$PS1" ]; then
     return
 fi
 
-source ~/.bash.d/dreid.sh
+source ~/.bash.d/bash.sh

@@ -1,0 +1,125 @@
+class SecurityKnobSet < ActiveRecord::Base
+  has_and_belongs_to_many :profiles
+  has_and_belongs_to_many :interface_knob_sets
+
+  serialize :EAPClientConfiguration
+  serialize :interface_relationship_ids
+  
+  @@payload_type = "com.apple.security.managed"
+  @@payload_subidentifier = "security"
+  @@is_unique = false
+  @@payload_name = "Network Security"
+
+  def self.payload_name
+      @@payload_name
+  end
+  
+  def self.payload_type
+      @@payload_type
+  end
+  
+  def self.payload_subidentifier
+      @@payload_subidentifier
+  end
+  
+  def self.is_unique
+      @@is_unique
+  end
+  
+  def is_for_ios
+    return false
+  end
+  
+  def delete
+    self.deleted = true
+    self.profiles.clear
+    self.interface_knob_sets.clear
+    self.save
+  end
+
+  def before_save
+    if self.respond_to?(:session) && self.session.has_key?(:user) && self.session[:user].has_key?('generated_uid')
+       self.last_modified_guid = self.session[:user]['generated_uid']
+    else
+       self.last_modified_guid = nil
+    end
+    
+      if self.PayloadUUID == nil
+          uuid = UUID.new
+          self.PayloadUUID = uuid.generate
+      end
+      
+      if self.PayloadVersion == nil
+          self.PayloadVersion = 1
+      else
+          self.PayloadVersion = self.PayloadVersion + 1
+      end
+
+      for profile in self.profiles
+          profile.save
+      end
+
+      for relationship_id in self.interface_relationship_ids
+        int_knob_set = InterfaceKnobSet.find(:first, :conditions => {:relationship_id => relationship_id})
+        if int_knob_set != nil && !self.interface_knob_sets.include?(int_knob_set)
+          self.interface_knob_sets.push(int_knob_set)
+        elsif int_knob_set == nil
+          self.interface_relationship_ids.delete(relationship_id)
+        end
+      end
+
+      for int_knob_set in self.interface_knob_sets
+        relationship_id = int_knob_set.relationship_id
+        if !self.interface_relationship_ids.include?(relationship_id)
+          self.interface_knob_sets.delete(int_knob_set)
+        end
+      end
+  end
+  
+  def get_attributes
+      return_hash = self.attributes
+      
+      return_hash[:profiles] = []
+      for profile in self.profiles
+          return_hash[:profiles].push(profile.id)
+      end
+      
+      return_hash[:interface_knob_sets] = self.interface_knob_sets.collect{|ks| ks.id}
+
+      return return_hash
+  end
+
+  def generate_payload_hash(root_payload_identifier)
+    return nil
+  end
+
+  def []=(key,value)
+    if key == "interface_knob_sets"
+      self.interface_knob_sets = value
+    else
+      super(key,value)
+    end
+  end
+ 
+  def interface_knob_sets= knob_set_array
+    cur_knob_set_ids = self.interface_knob_sets.collect{|ks| ks.id}
+    new_id_array = knob_set_array - cur_knob_set_ids
+    remove_id_array = cur_knob_set_ids - knob_set_array
+
+    for id in new_id_array
+      int_knob_set = InterfaceKnobSet.find_by_id(id)
+      
+      if int_knob_set != nil
+        self.interface_knob_sets.push(int_knob_set)
+      end
+    end
+
+    for id in remove_id_array
+      int_knob_set = InterfaceKnobSet.find_by_id(id)
+
+      if int_knob_set != nil
+        self.interface_knob_sets.delete(int_knob_set)
+      end
+    end
+  end
+end

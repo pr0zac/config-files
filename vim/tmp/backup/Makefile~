@@ -1,0 +1,76 @@
+UNAME = $(shell uname)
+ARCH = $(shell uname -i)
+PROTOC = protoc
+
+TARGETS=expresso_server expresso_client certificate_server
+
+HOLEPOKEOBJS=./holepoke/holepoke.pb.o ./holepoke/endpoint.o ./holepoke/sender.o ./holepoke/receiver.o ./holepoke/network.o ./holepoke/fsm.o ./holepoke/uuid.o
+
+OBJS=cert_com.pb.o udt_ssl_connector.o cc.o socket_list_item.o expresso_sender.o expresso_receiver.o
+
+UDTLIB=udt4/src/libudt.a
+
+DEPENDENCIES=$(HOLEPOKEOBJS) $(OBJS) $(UDTLIB)
+
+ifdef DEBUGON
+CFLAGS=-Wall -Werror -g -O0 -fno-inline -DDEBUGON
+HOLEPOKEFLAGS=DEBUGON=1
+else
+CFLAGS=-Wall -O3
+endif
+
+ifeq ($(UNAME), Darwin)
+macports_prefix=/opt/local
+INCLUDES+=-I$(macports_prefix)/include -I$(macports_prefix)/include/glib-2.0 -I$(macports_prefix)/lib/glib-2.0/include
+LDFLAGS+=-L$(macports_prefix)/lib -framework CoreFoundation -framework OpenDirectory -arch i386 -arch x86_64
+CFLAGS+=-arch i386 -arch x86_64
+CC=clang
+CXX=clang++
+LD=clang++
+UDT_MAKE_ARGS+=os=OSX arch=all
+endif
+
+ifeq ($(UNAME), Linux)
+INCLUDES+=-I/usr/include -I/usr/include/glib-2.0 -I/usr/lib/$(ARCH)-linux-gnu/glib-2.0/include -I/usr/lib/glib-2.0/include
+LDFLAGS+=-L/usr/lib -luuid -lcrypt
+CC=gcc
+CXX=g++
+LD=g++ -v
+endif
+
+INCLUDES+=-Iudt4/src
+LDFLAGS+=-lssl -lcrypto -lstdc++ -lpthread -lm -lprotobuf -lglib-2.0 -lboost_filesystem -lboost_system -llog4cpp
+
+CFLAGS+=$(INCLUDES)
+CXXFLAGS=$(CFLAGS)
+
+all: $(TARGETS)
+
+%.pb.cc: %.proto
+	$(PROTOC) -I=. --cpp_out=. $<
+
+expresso_server: $(DEPENDENCIES) expresso_server.o
+	$(LD) -o expresso_server expresso_server.o $(DEPENDENCIES) $(LDFLAGS)
+
+expresso_client: $(DEPENDENCIES) expresso_client.o
+	$(LD) -o expresso_client expresso_client.o $(DEPENDENCIES) $(LDFLAGS)
+
+certificate_server: $(HOLEPOKEOBJS) certificate_server.o cert_com.pb.o
+
+	$(LD) -o certificate_server certificate_server.o cert_com.pb.o $(HOLEPOKEOBJS) $(LDFLAGS)
+
+$(HOLEPOKEOBJS):
+	cd holepoke && make $(HOLEPOKEFLAGS)
+
+$(UDTLIB):
+	cd udt4 && make -e $(UDT_MAKE_ARGS)
+
+debug:
+#	cd holepoke && make clean
+	$(RM) $(OBJS) $(TARGETS)
+	make DEBUGON=1
+
+clean:
+	cd udt4 && make -e $(UDT_MAKE_ARGS) clean
+	cd holepoke && make clean
+	$(RM) $(OBJS) $(TARGETS) cert_com.pb.h

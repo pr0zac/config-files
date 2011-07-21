@@ -1,0 +1,11 @@
+# Default GitHub user (zacmorris)
+Host github.com
+  HostName github.com
+  User git
+  IdentityFile /Users/zac/.ssh/id_rsa
+
+# pr0zac user
+Host github-pr0zac
+  HostName github.com
+  User git
+  IdentityFile /Users/zac/.ssh/id_rsa_client

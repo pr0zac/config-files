@@ -1,0 +1,232 @@
+class OffersController < ApplicationController
+  # before_filter :require_user, :except => [:upload]
+  before_filter :dev_authenticate, :only => [:upload, :get]
+  
+  def upload
+    #just generate the page
+  end
+  
+  def offer
+    offer_info = JSON.parse(params[:request_info], {:symbolize_names => true})
+    offer_info[:created_user_id] = session[:user_id]
+    offer_info[:created_ip] = request.ip
+    offer = Offer.create_with_info(offer_info)
+  
+    # user = User.find_by_id(session[:user_id])
+    # if user
+    #   user.peer_id = offer_info[:peer_id]
+    #   user.save
+    # end
+  
+    if offer
+      return_info = offer.attributes.symbolize_keys
+      return_info.delete(:password_hash)
+      return_info[:claim_count] = 0
+      if offer_info[:temporary_key]
+        return_info[:temporary_key] = offer_info[:temporary_key]
+      end
+      render :json => {:status_code => 200, :offer => return_info}
+    else
+      render :json => {:status_code => 500, :error => {:type => 'server_error'}}
+    end
+  end
+  
+  def reoffer
+    offer_info = JSON.parse(params[:request_info], {:symbolize_names => true})
+    offer = Offer.find_by_offer_key(params[:id])
+    
+    # user = User.find_by_id(session[:user_id])
+    # if user
+    #   user.peer_id = offer_info[:peer_id]
+    #   user.save
+    # end
+    
+    if offer
+      if !offer.passworded || offer.password == offer_info[:password]
+        offer.peer_id = offer_info[:peer_id]
+        offer.last_keep_alive = Time.now
+        if offer.save
+          render :json => {:status_code => 200, :offer => offer.get_attributes}
+        else
+          render :json => {:status_code => 500, :error => {:type => 'server_error'}}
+        end
+      else
+        offer.pw_failed_attempts = offer.pw_failed_attempts + 1
+        offer.pw_failures.push({:user_id => session[:user_id], :failed_at => Time.now(), :failed_ip => request.ip})
+        offer.save
+        render :json => {:status_code => 500, :error => {:type => 'incorrect_password'}}
+      end
+    else
+      render :json => {:status_code => 500, :error => {:type => 'server_error'}}
+    end
+  end
+  
+  def keep_alive
+    offer_info = JSON.parse(params[:request_info], {:symbolize_names => true})
+    offer = Offer.find_by_offer_key(params[:id])
+    
+    # user = User.find_by_id(session[:user_id])
+    # if user && offer_info[:peer_id]
+    #   user.peer_id = offer_info[:peer_id]
+    #   user.save
+    # end
+    
+    if offer
+      if !offer.passworded || offer.password == offer_info[:password]
+        if offer_info[:peer_id]
+          offer.peer_id = offer_info[:peer_id]
+        end
+        offer.last_keep_alive = Time.now
+        if offer.save
+          render :json => {:status_code => 200}
+        else
+          render :json => {:status_code => 500, :error => {:type => 'server_error'}}
+        end
+      else
+        offer.pw_failed_attempts = offer.pw_failed_attempts + 1
+        offer.pw_failures.push({:user_id => session[:user_id], :failed_at => Time.now(), :failed_ip => request.ip})
+        offer.save
+        render :json => {:status_code => 500, :error => {:type => 'incorrect_password'}}
+      end
+    else
+      render :json => {:status_code => 500, :error => {:type => 'no_offer'}}
+    end
+  end
+  
+  def keep_many_alive
+    offer_hash = JSON.parse(params[:request_info], {:symbolize_names => true})
+    
+    # user = User.find_by_id(session[:user_id])
+    # if user && offer_hash[:peer_id]
+    #   user.peer_id = offer_hash[:peer_id]
+    #   user.save
+    #   offer_hash.delete(:peer_id)
+    # end
+    
+    if offer_hash[:offers]
+      offer_hash[:offers].each do |offer_array|
+        offer = Offer.find_by_offer_key(offer_array[0])
+        if offer
+          if !offer.passworded || (offer_array[1] && offer.password == offer_array[2])
+            if offer_hash[:peer_id]
+              offer.peer_id = offer_hash[:peer_id]
+            end
+            offer.last_keep_alive = Time.now
+            offer.save
+          else
+            offer.pw_failed_attempts = offer.pw_failed_attempts + 1
+            offer.pw_failures.push({:user_id => session[:user_id], :failed_at => Time.now(), :failed_ip => request.ip})
+            offer.save
+          end
+        end
+      end
+    else
+      offer_hash.delete(:peer_id)
+      offer_hash.each do |offer_key, offer_info|
+        offer = Offer.find_by_offer_key(offer_key)
+        if offer
+          if !offer.passworded || offer.password == offer_info[:password]
+            if offer_info[:peer_id]
+              offer.peer_id = offer_info[:peer_id]
+            end
+            offer.last_keep_alive = Time.now
+            offer.save
+          else
+            offer.pw_failed_attempts = offer.pw_failed_attempts + 1
+            offer.pw_failures.push({:user_id => session[:user_id], :failed_at => Time.now(), :failed_ip => request.ip})
+            offer.save
+          end
+        end
+      end
+    end
+    
+    render :json => {:status_code => 200}
+  end
+  
+  def get
+    # user = User.find_by_id(session[:user_id])
+    if request.post?
+      offer_info = JSON.parse(params[:request_info], {:symbolize_names => true})
+      offer = Offer.find_by_offer_key(params[:id])
+      if offer && (offer.persistent || offer.claim_count == 0)
+        if false #offer.allowed_users && user && offer.allowed_users.count > 0 && !offer.allowed_users.include?(user)
+          render :json => {:status_code => 500, :error => {:type => 'no_offer'}}
+        else
+          if offer.passworded && offer.password != offer_info[:password]
+            offer.pw_failed_attempts = offer.pw_failed_attempts + 1
+            offer.pw_failures.push({:user_id => session[:user_id], :failed_at => Time.now(), :failed_ip => request.ip})
+            offer.save
+            render :json => {:status_code => 500, :error => {:type => 'incorrect_password'}}
+          else
+            render :json => {:status_code => 200, :offer => offer.get_attributes}
+          end
+        end
+      else
+        render :json => {:status_code => 500, :error => {:type => 'no_offer'}}
+      end
+    else
+      if params[:id].length == 5 && (params[:id] =~ /^\w\w\w\w\w$/) != nil
+        offer = Offer.find_by_offer_key(params[:id])
+        if offer && (offer.persistent || offer.claim_count == 0)
+          if false #offer.allowed_users && user && offer.allowed_users.count > 0 && !offer.allowed_users.include?(user)
+            @offer_info = {:offer_key => params[:id]}
+            render :action => :missing
+          else
+            if offer.passworded
+              @offer_info = {:offer_key => offer.offer_key,
+                             :passworded => offer.passworded,
+                             :total_size => -1,
+                             :created_by_app => offer.created_by_app
+                            }
+            else
+              @offer_info = offer.get_attributes
+            end
+          end
+        else
+          @offer_info = {:offer_key => params[:id]}
+          render :action => :missing
+        end
+      else
+        redirect_to :root
+      end
+    end
+  end
+  
+  def claim
+    # user = User.find_by_id(session[:user_id])
+    offer_info = JSON.parse(params[:request_info], {:symbolize_names => true})
+    offer = Offer.find_by_offer_key(params[:id])
+    if offer && (offer.persistent || offer.claim_count == 0)
+      if false #offer.allowed_users && user && offer.allowed_users.count > 0 && !offer.allowed_users.include?(user)
+        render :json => {:status_code => 500, :error => {:type => 'no_offer'}}
+      else
+        if !offer.passworded || offer.password == offer_info[:password]
+          if offer_info[:transfer_id]
+            transfer = Transfer.find(offer_info[:transfer_id])
+          end
+          if transfer
+            transfer.amount_transferred = offer_info[:amount_transferred]
+          else
+            transfer = Transfer.new
+            transfer.offer = offer
+            transfer.claimed_at = Time.now
+            transfer.claimed_user_id = session[:user_id]
+            transfer.claimed_ip = request.ip
+          end
+          if transfer.save && offer.save
+            render :json => {:status_code => 200, :offer => offer.get_attributes, :transfer => transfer.get_attributes}
+          else
+            render :json => {:status_code => 500, :error => {:type => 'server_error'}}
+          end
+        else
+          offer.pw_failed_attempts = offer.pw_failed_attempts + 1
+          offer.pw_failures.push({:user_id => session[:user_id], :failed_at => Time.now(), :failed_ip => request.ip})
+          offer.save
+          render :json => {:status_code => 500, :error => {:type => 'incorrect_password'}}
+        end
+      end
+    else
+      render :json => {:status_code => 500, :error => {:type => 'no_offer'}}
+    end
+  end
+end
