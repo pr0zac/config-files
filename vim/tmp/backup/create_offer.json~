@@ -1,7 +1,0 @@
-{'peer_id': 'thisisafakepeerid',
- 'offer_size': 1234567,
- 'file_count': 2,
- 'created_by_app: 1,
- 'claim_limit': 5,
- 'passworded': 1,
- 'password': 'password'}

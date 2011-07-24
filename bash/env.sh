@@ -7,6 +7,6 @@ EDITOR=vim
 
 NODE_PATH=/usr/local/lib/node
 
-[[ -s "/Users/zac/.rvm/scripts/rvm" ]] && source "/Users/zac/.rvm/scripts/rvm"  # This loads RVM into a shell session.
+[[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm" # Load RVM function
 
 export PATH EDITOR WORKON_HOME NODE_PATH
