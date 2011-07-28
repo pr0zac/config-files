@@ -1,6 +1,6 @@
 " pathogen.vim - path option manipulation
-" Maintainer: Tim Pope <vimNOSPAM@tpope.org>
-" Version: 1.2
+" Maintainer:   Tim Pope <vimNOSPAM@tpope.org>
+" Version:      1.2
 
 " Install in ~/.vim/autoload (or ~\vimfiles\autoload).
 "
@@ -84,9 +84,9 @@ endfunction "}}}1
 " Prepend all subdirectories of path to the rtp, and append all after
 " directories in those subdirectories.
 function! pathogen#runtime_prepend_subdirectories(path) " {{{1
-  let sep = pathogen#separator()
+  let sep    = pathogen#separator()
   let before = pathogen#glob_directories(a:path.sep."*[^~]")
-  let after = pathogen#glob_directories(a:path.sep."*[^~]".sep."after")
+  let after  = pathogen#glob_directories(a:path.sep."*[^~]".sep."after")
   let rtp = pathogen#split(&rtp)
   let path = expand(a:path)
   call filter(rtp,'v:val[0:strlen(path)-1] !=# path')
@@ -94,9 +94,9 @@ function! pathogen#runtime_prepend_subdirectories(path) " {{{1
   return &rtp
 endfunction " }}}1
 
-" For each directory in rtp, check for a subdirectory named dir. If it
+" For each directory in rtp, check for a subdirectory named dir.  If it
 " exists, add all subdirectories of that subdirectory to the rtp, immediately
-" after the original directory. If no argument is given, 'bundle' is used.
+" after the original directory.  If no argument is given, 'bundle' is used.
 " Repeated calls with the same arguments are ignored.
 function! pathogen#runtime_append_all_bundles(...) " {{{1
   let sep = pathogen#separator()
@@ -108,9 +108,9 @@ function! pathogen#runtime_append_all_bundles(...) " {{{1
   let list = []
   for dir in pathogen#split(&rtp)
     if dir =~# '\<after$'
-      let list += pathogen#glob_directories(substitute(dir,'after$',name,'').sep.'*[^~]'.sep.'after') + [dir]
+      let list +=  pathogen#glob_directories(substitute(dir,'after$',name,'').sep.'*[^~]'.sep.'after') + [dir]
     else
-      let list += [dir] + pathogen#glob_directories(dir.sep.name.sep.'*[^~]')
+      let list +=  [dir] + pathogen#glob_directories(dir.sep.name.sep.'*[^~]')
     endif
   endfor
   let &rtp = pathogen#join(pathogen#uniq(list))
@@ -130,4 +130,3 @@ function! pathogen#helptags() " {{{1
 endfunction " }}}1
 
 " vim:set ft=vim ts=8 sw=2 sts=2:
-
