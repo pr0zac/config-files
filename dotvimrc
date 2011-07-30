@@ -63,9 +63,6 @@ set statusline+=%l/%L   "cursor line/total lines
 set statusline+=\ %P    "percent through file
 set laststatus=2
 
-"turn off needless toolbar on gvim/mvim
-set guioptions-=T
-
 "recalculate the trailing whitespace warning when idle, and after saving
 autocmd cursorhold,bufwritepost * unlet! b:statusline_trailing_space_warning
 
@@ -214,13 +211,20 @@ set ttymouse=xterm2
 "hide buffers when not displayed
 set hidden
 
-
 "Command-T configuration
 let g:CommandTMaxHeight=10
 let g:CommandTMatchWindowAtTop=1
 
 if (has("gui"))
+  if (has("GUI_GTK"))
+    set guifont=Monospace\ 9
+    set lines=5000
+  endif
+
   colorscheme molokai
+  set guioptions-=m  "remove menu bar
+  set guioptions-=r
+  set guioptions-=T
 else
   colorscheme delek
 endif
