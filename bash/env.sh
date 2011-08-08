@@ -1,3 +1,5 @@
+export TERM="xterm-256color"
+
 WORKON_HOME=~/.virtualenvs
 
 mkdir -p $WORKON_HOME

@@ -1,12 +1,16 @@
+"Use Vim settings, rather then Vi settings (much better!).
+"This must be first, because it changes other options as a side effect.
+set nocompatible
+
 "necessary on some Linux distros for pathogen to properly load bundles
 filetype off
 
 "load pathogen managed plugins
 call pathogen#runtime_append_all_bundles()
 
-"Use Vim settings, rather then Vi settings (much better!).
-"This must be first, because it changes other options as a side effect.
-set nocompatible
+"load ftplugins and indent files
+filetype plugin on
+filetype indent on
 
 "allow backspacing over everything in insert mode
 set backspace=indent,eol,start
@@ -49,19 +53,18 @@ nmap <Up> gk
 set fo=l
 
 "statusline setup
-set statusline=%f       "tail of the filename
-
-"Git
-set statusline+=[%{GitBranch()}]
-
-"RVM
-set statusline+=%{exists('g:loaded_rvm')?rvm#statusline():''}
-
+set laststatus=2
+set statusline=%t       "tail of the filename
+set statusline+=%h      "help file flag
+set statusline+=%m      "modified flag
+set statusline+=%r      "read only flag
+set statusline+=%y      "filetype
+set statusline+=[%{GitBranch()}]    "git branch info
 set statusline+=%=      "left/right separator
 set statusline+=%c,     "cursor column
 set statusline+=%l/%L   "cursor line/total lines
 set statusline+=\ %P    "percent through file
-set laststatus=2
+
 
 "recalculate the trailing whitespace warning when idle, and after saving
 autocmd cursorhold,bufwritepost * unlet! b:statusline_trailing_space_warning
@@ -197,10 +200,6 @@ set scrolloff=3
 set sidescrolloff=7
 set sidescroll=1
 
-"load ftplugins and indent files
-filetype plugin on
-filetype indent on
-
 "turn on syntax highlighting
 syntax on
 
@@ -220,13 +219,11 @@ if (has("gui"))
     set guifont=Monospace\ 9
     set lines=5000
   endif
-
-  colorscheme molokai
+  
+  colorscheme tangoshady
   set guioptions-=m  "remove menu bar
   set guioptions-=r
   set guioptions-=T
-else
-  colorscheme delek
 endif
 
 " PeepOpen uses <Leader>p as well so you will need to redefine it so something
