@@ -350,3 +350,4 @@ vmap <D-]> >gv
 
 let ScreenShot = {'Icon':0, 'Credits':0, 'force_background':'#FFFFFF'}
 
+autocmd   FileType cpp source ~/.vim/lang/cpp.vim
