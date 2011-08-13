@@ -1,0 +1,2 @@
+export WINDOW_MANAGER=xmonad
+exec gnome-session --purge-delay=3000
