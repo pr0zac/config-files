@@ -20,13 +20,21 @@ set history=1000
 
 set showcmd     "show incomplete cmds down the bottom
 set showmode    "show current mode down the bottom
-
 set incsearch   "find the next match as we type the search
 ""set hlsearch    "hilight searches by default
 
 set number      "add line numbers
 set showbreak=...
 set wrap linebreak nolist
+set undofile
+set ignorecase
+set smartcase
+nnoremap / /\v
+vnoremap / /\v
+inoremap <F1> <ESC>
+nnoremap <F1> <ESC>
+vnoremap <F1> <ESC>
+au FocusLost * :wa
 
 "mapping for command key to map navigation thru display lines instead
 "of just numbered lines
@@ -215,12 +223,10 @@ let g:CommandTMaxHeight=10
 let g:CommandTMatchWindowAtTop=1
 
 if (has("gui"))
-  if (has("GUI_GTK"))
-    set guifont=Monospace\ 9
-    set lines=5000
-  endif
+  set gfn=Monaco:h12
+  set lines=5000
   
-  colorscheme tangoshady
+  colorscheme molokai
   set guioptions-=m  "remove menu bar
   set guioptions-=r
   set guioptions-=T
