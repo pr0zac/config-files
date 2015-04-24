@@ -1,0 +1,24 @@
+#
+# Executes commands at the start of an interactive session.
+#
+# Authors:
+#   Sorin Ionescu <sorin.ionescu@gmail.com>
+#
+
+# Source Prezto.
+if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/init.zsh" ]]; then
+  source "${ZDOTDIR:-$HOME}/.zprezto/init.zsh"
+fi
+
+# Customize to your needs...
+#
+source "${HOME}/bin/scm-prompt"
+
+bindkey -v
+bindkey '\e[3~' delete-char
+bindkey '^R' history-incremental-search-backward
+
+export EDITOR=/usr/bin/vim
+export VISUAL=/usr/bin/vim
+export LSCOLORS=ExFxBxDxCxegedabagacad
+

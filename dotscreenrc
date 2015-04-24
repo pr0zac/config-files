@@ -1,3 +1,0 @@
-startup_message off
-hardstatus alwayslastline '%{= wk}%?%-Lw%?%{r}(%{k}%n*%f%t%?(%u)%?%{r})%{k}%?%+Lw%?%?%= %m/%d/%Y %C%A'
-defscrollback 5000

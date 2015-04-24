@@ -1,5 +1,0 @@
-if [ -z "$PS1" ]; then
-    return
-fi
-
-source ~/.bash.d/bash.sh
