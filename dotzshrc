@@ -87,3 +87,9 @@ export THEOS_DEVICE_IP=10.0.1.7 THEOS_DEVICE_PORT=22
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
 export HOMEBREW_GITHUB_API_TOKEN=''
+
+PATH="/Users/zacm/perl5/bin${PATH:+:${PATH}}"; export PATH;
+PERL5LIB="/Users/zacm/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
+PERL_LOCAL_LIB_ROOT="/Users/zacm/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
+PERL_MB_OPT="--install_base \"/Users/zacm/perl5\""; export PERL_MB_OPT;
+PERL_MM_OPT="INSTALL_BASE=/Users/zacm/perl5"; export PERL_MM_OPT;

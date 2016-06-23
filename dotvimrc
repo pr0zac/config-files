@@ -42,7 +42,7 @@ Plugin 'tpope/vim-commentary'
 call vundle#end()            " required
 filetype plugin indent on    " required
 
-let g:rehah256 = 1
+let g:rehash256=1
 color molokai
 set background=dark
 
@@ -80,6 +80,8 @@ set undodir=~/.vim_other/_backup
 set undofile
 
 let g:ycm_autoclose_preview_window_after_completion=1
+let g:ycm_collect_identifies_from_tags_files=1
+let g:ycm_confirm_extra_conf=0
 map <C-g>  :YcmCompleter GoTo<CR>
 
 let g:ctrlp_clear_cache_on_exit=0
@@ -98,13 +100,6 @@ set wildmode=longest,list,full
 set wildmenu
 
 let $NVIM_TUI_ENABLE_CURSOR_SHAPE=1
-if exists('$TMUX')
-  let &t_SI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=1\x7\<Esc>\\"
-  let &t_EI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=0\x7\<Esc>\\"
-else
-  let &t_SI = "\<Esc>]50;CursorShape=1\x7"
-  let &t_EI = "\<Esc>]50;CursorShape=0\x7"
-endif
 
 "Show leading whitespace that includes spaces, and trailing whitespace.
 highlight ExtraWhitespace ctermbg=red guibg=red
@@ -149,7 +144,8 @@ let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 1
 let g:syntastic_cpp_compiler_options = "-std=c++11 -Wall -Wextra -Wpedantic"
 
-set tags=./tags;,~/.vimtags
+set cpoptions+=d
+set tags=./.tags;,~/.vim/tags
 let g:easytags_events = ['BufReadPost', 'BufWritePost']
 let g:easytags_async = 1
 let g:easytags_dynamic_files = 2
