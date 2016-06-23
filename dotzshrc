@@ -86,4 +86,4 @@ export THEOS_DEVICE_IP=10.0.1.7 THEOS_DEVICE_PORT=22
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
-export HOMEBREW_GITHUB_API_TOKEN='ee2908cfb0001e4942f64ffbf497e1331df00605'
+export HOMEBREW_GITHUB_API_TOKEN=''
