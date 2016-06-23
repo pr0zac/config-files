@@ -11,14 +11,79 @@ if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/init.zsh" ]]; then
 fi
 
 # Customize to your needs...
-#
-source "${HOME}/bin/scm-prompt"
+
+# Lines configured by zsh-newuser-install
+HISTFILE=~/.histfile
+HISTSIZE=1000000
+SAVEHIST=1000000
+setopt appendhistory autocd beep extendedglob nomatch
+unsetopt notify
+bindkey -v
+# End of lines configured by zsh-newuser-install
+# The following lines were added by compinstall
+zstyle :compinstall filename '/Users/zacm/.zshrc'
+
+autoload -Uz compinit
+compinit
+# End of lines added by compinstall
+
+# added by newengsetup
+export UBER_HOME="$HOME/Uber"
+export UBER_OWNER="zacm@uber.com"
+export UBER_LDAP_UID="zacm"
+export VAGRANT_DEFAULT_PROVIDER=aws
+export ANDROID_HOME=/Users/zacm/Library/Android/sdk/
+export GOPATH="$HOME/gocode"
+export PATH="$PATH:$GOPATH/bin"
+
+path+=(/Users/zacm/bin)
+path+=(/Users/zacm/Library/Android/sdk/platform-tools)
+
+[ -s "/usr/local/bin/virtualenvwrapper.sh" ] && . /usr/local/bin/virtualenvwrapper.sh
+[ -s "$HOME/.nvm/nvm.sh" ] && . $HOME/.nvm/nvm.sh
+if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
+
+_sync_dir () {
+    cmd=$1
+    shift
+    new_directory=$(boxer sync_dir $@)
+    if [ "$?" -eq "0" ]; then
+        $cmd $new_directory
+    else
+        echo "$new_directory"
+    fi
+}
+cdsync () {
+    _sync_dir cd $@
+}
+editsync () {
+    _sync_dir $EDITOR $@
+}
+opensync () {
+    _sync_dir open @
+}
+
+path=(~/bin /usr/local/sbin /usr/local/bin $path)
 
 bindkey -v
 bindkey '\e[3~' delete-char
 bindkey '^R' history-incremental-search-backward
 
-export EDITOR=/usr/bin/vim
-export VISUAL=/usr/bin/vim
+export EDITOR=~/bin/vim
+export VISUAL=~/bin/vim
 export LSCOLORS=ExFxBxDxCxegedabagacad
+export TERM=xterm-256color
 
+alias bp='java -jar ~/bin/burp/burpsuite_pro_*.jar(om[1]) &'
+
+eval "$(thefuck --alias)"
+
+fpath=(/usr/local/share/zsh-completions $fpath)
+
+export THEOS=~/bin/theos
+export PATH=$THEOS/bin:$PATH
+export THEOS_DEVICE_IP=10.0.1.7 THEOS_DEVICE_PORT=22
+
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+
+export HOMEBREW_GITHUB_API_TOKEN='ee2908cfb0001e4942f64ffbf497e1331df00605'
