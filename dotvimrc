@@ -27,6 +27,7 @@ Plugin 'klen/python-mode'
 Plugin 'moll/vim-node'
 Plugin 'scrooloose/nerdtree'
 Plugin 'vim-airline/vim-airline'
+Plugin 'vim-airline/vim-airline-themes'
 Plugin 'xolox/vim-misc'
 Plugin 'xolox/vim-easytags'
 Plugin 'majutsushi/tagbar'
@@ -42,9 +43,9 @@ Plugin 'tpope/vim-commentary'
 call vundle#end()            " required
 filetype plugin indent on    " required
 
+let $NVIM_TUI_ENABLE_TRUE_COLOR=1
 let g:rehash256=1
-color molokai
-set background=dark
+colorscheme molokai
 
 "dear f1 key, please go fuck yourself, sincerely zac
 inoremap <f1> <esc>
@@ -73,8 +74,9 @@ set tabstop=2
 set shiftwidth=2
 set expandtab
 
+highlight CursorLine guibg=#232425
 set colorcolumn=81
-highlight ColorColumn guibg=Grey16
+highlight ColorColumn guibg=#242526
 
 set undodir=~/.vim_other/_backup
 set undofile
