@@ -83,7 +83,7 @@ export THEOS_DEVICE_IP=10.0.1.7 THEOS_DEVICE_PORT=22
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
-export HOMEBREW_GITHUB_API_TOKEN='72c3bce7bb0774e386863c3328e68fbc980c2ae5'
+export HOMEBREW_GITHUB_API_TOKEN=''
 
 PATH="/Users/zacm/perl5/bin${PATH:+:${PATH}}"; export PATH;
 PERL5LIB="/Users/zacm/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
@@ -94,3 +94,17 @@ PERL_MM_OPT="INSTALL_BASE=/Users/zacm/perl5"; export PERL_MM_OPT;
 alias bp='java -jar ~/bin/burp/burpsuite_pro_*.jar(om[1]) &'
 
 eval "$(thefuck --alias)"
+
+zle-keymap-select () {
+    if [ "$TERM" = "xterm-256color" ]; then
+        if [ $KEYMAP = vicmd ]; then
+            # the command mode for vi
+            echo -ne "\e[2 q"
+        else
+            # the insert mode for vi
+            echo -ne "\e[5 q"
+        fi
+    fi
+}
+
+alias en='vim -c Geeknote'

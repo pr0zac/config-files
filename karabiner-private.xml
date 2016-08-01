@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<root>
+  <vkopenurldef>
+    <name>KeyCode::VK_OPEN_URL_SHELL_SCREENSAVER</name>
+    <url type="shell">
+      <![CDATA[    /System/Library/Frameworks/ScreenSaver.framework/Resources/ScreenSaverEngine.app/Contents/MacOS/ScreenSaverEngine    ]]>
+    </url>
+  </vkopenurldef>
+
+  <item>
+    <name>Activate screensaver by Shift-Option-Cmd-L</name>
+    <identifier>private.control_command_l_to_lock_screen</identifier>
+    <autogen>
+      __KeyToKey__
+      KeyCode::L, ModifierFlag::OPTION_L | ModifierFlag::COMMAND_L | ModifierFlag::SHIFT_L,
+      KeyCode::VK_OPEN_URL_SHELL_SCREENSAVER
+    </autogen>
+  </item>
+  <item>
+    <name>Home by Shift-PageUp</name>
+    <identifier>private.shift_pgup_to_home</identifier>
+    <autogen>
+      __KeyToKey__
+      KeyCode::PAGEUP, ModifierFlag::SHIFT_L,
+      KeyCode::HOME
+    </autogen>
+  </item>
+  <item>
+    <name>End by Shift-PageDown</name>
+    <identifier>private.shift_pgdn_to_end</identifier>
+    <autogen>
+      __KeyToKey__
+      KeyCode::PAGEDOWN, ModifierFlag::SHIFT_L,
+      KeyCode::END
+    </autogen>
+  </item>
+  <item>
+    <name>Volume Up by Ctrl-Cmd-=</name>
+    <identifier>private.control_command_equal_to_vol_up</identifier>
+    <autogen>
+      __KeyToKey__
+      KeyCode::EQUAL, ModifierFlag::COMMAND_L, ModifierFlag::CONTROL_L,
+      KeyCode::VK_CONSUMERKEY_VOLUME_UP
+    </autogen>
+  </item>
+  <item>
+    <name>Volume Down by Ctrl-Cmd--</name>
+    <identifier>private.control_command_minus_to_vol_down</identifier>
+    <autogen>
+      __KeyToKey__
+      KeyCode::MINUS, ModifierFlag::COMMAND_L, ModifierFlag::CONTROL_L,
+      KeyCode::VK_CONSUMERKEY_VOLUME_DOWN
+    </autogen>
+  </item>
+  <item>
+    <name>Play by Ctrl-Cmd-P</name>
+    <identifier>private.control_command_p_to_play</identifier>
+    <autogen>
+      __KeyToKey__
+      KeyCode::P, ModifierFlag::COMMAND_L, ModifierFlag::CONTROL_L,
+      KeyCode::VK_CONSUMERKEY_MUSIC_PLAY
+    </autogen>
+  </item>
+  <item>
+    <name>Mute by Ctrl-Cmd-M</name>
+    <identifier>private.control_command_m_to_mute</identifier>
+    <autogen>
+      __KeyToKey__
+      KeyCode::M, ModifierFlag::COMMAND_L, ModifierFlag::CONTROL_L,
+      KeyCode::VK_CONSUMERKEY_VOLUME_MUTE
+    </autogen>
+  </item>
+  <item>
+    <name>Next by Ctrl-Cmd-]</name>
+    <identifier>private.control_command_rbracket_to_next</identifier>
+    <autogen>
+      __KeyToKey__
+      KeyCode::BRACKET_RIGHT, ModifierFlag::COMMAND_L, ModifierFlag::CONTROL_L,
+      KeyCode::VK_CONSUMERKEY_MUSIC_NEXT
+    </autogen>
+  </item>
+  <item>
+    <name>Previous by Ctrl-Cmd-[</name>
+    <identifier>private.control_command_lbracket_to_prev</identifier>
+    <autogen>
+      __KeyToKey__
+      KeyCode::BRACKET_LEFT, ModifierFlag::COMMAND_L, ModifierFlag::CONTROL_L,
+      KeyCode::VK_CONSUMERKEY_MUSIC_PREV
+    </autogen>
+  </item>
+</root>
