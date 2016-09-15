@@ -8,11 +8,11 @@
   </vkopenurldef>
 
   <item>
-    <name>Activate screensaver by Ctrl-Cmd-Esc</name>
-    <identifier>private.ctrl_cmd_esc_to_lock_screen</identifier>
+    <name>Activate screensaver by Ctrl-Option-Cmd-Esc</name>
+    <identifier>private.ctrl_option_cmd_esc_to_lock_screen</identifier>
     <autogen>
       __KeyToKey__
-      KeyCode::ESCAPE, ModifierFlag::CONTROL_L | ModifierFlag::COMMAND_L,
+      KeyCode::ESCAPE, ModifierFlag::CONTROL_L | ModifierFlag::OPTION_L | ModifierFlag::COMMAND_L,
       KeyCode::VK_OPEN_URL_SHELL_SCREENSAVER
     </autogen>
   </item>
@@ -71,20 +71,20 @@
     </autogen>
   </item>
   <item>
-    <name>Next by Ctrl-Cmd-]</name>
-    <identifier>private.control_command_rbracket_to_next</identifier>
+    <name>Next by Ctrl-Cmd-'</name>
+    <identifier>private.control_command_quote_to_next</identifier>
     <autogen>
       __KeyToKey__
-      KeyCode::BRACKET_RIGHT, ModifierFlag::COMMAND_L, ModifierFlag::CONTROL_L,
+      KeyCode::QUOTE, ModifierFlag::COMMAND_L, ModifierFlag::CONTROL_L,
       KeyCode::VK_CONSUMERKEY_MUSIC_NEXT
     </autogen>
   </item>
   <item>
-    <name>Previous by Ctrl-Cmd-[</name>
-    <identifier>private.control_command_lbracket_to_prev</identifier>
+    <name>Previous by Ctrl-Cmd-;</name>
+    <identifier>private.control_command_semicolon_to_prev</identifier>
     <autogen>
       __KeyToKey__
-      KeyCode::BRACKET_LEFT, ModifierFlag::COMMAND_L, ModifierFlag::CONTROL_L,
+      KeyCode::SEMICOLON, ModifierFlag::COMMAND_L, ModifierFlag::CONTROL_L,
       KeyCode::VK_CONSUMERKEY_MUSIC_PREV
     </autogen>
   </item>
