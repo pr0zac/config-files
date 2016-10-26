@@ -12,7 +12,7 @@ Plugin 'Shougo/vimproc'
 Plugin 'tomasr/molokai'
 Plugin 'Shougo/neosnippet.vim'
 Plugin 'Shougo/neosnippet-snippets'
-Plugin 'kien/ctrlp.vim'
+Plugin 'ctrlpvim/ctrlp.vim'
 Plugin 'Shougo/vimshell'
 Plugin 'scrooloose/syntastic'
 Plugin 'sjl/gundo.vim'
@@ -39,26 +39,31 @@ Plugin 'Valloric/YouCompleteMe'
 Plugin 'rdnetto/YCM-Generator'
 Plugin 'tpope/vim-commentary'
 Plugin 'neilagabriel/vim-geeknote'
+Plugin 'takac/vim-hardtime'
+Plugin 'vim-scripts/proguard.vim'
+Plugin 'dkprice/vim-easygrep'
+" Plugin 'Shougo/deoplete.nvim'
+Plugin 'artur-shaik/vim-javacomplete2'
+Plugin 'hsanson/vim-android'
 
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
 filetype plugin indent on    " required
 
+syntax on
+syn match tab display "\t"
+hi link tab Error
 let $NVIM_TUI_ENABLE_TRUE_COLOR=1
 let g:rehash256=1
 colorscheme molokai
+hi Normal ctermfg=255
 
 "dear f1 key, please go fuck yourself, sincerely zac
 inoremap <f1> <esc>
 nnoremap <f1> <esc>
 vnoremap <f1> <esc>
 
-syntax on
-syn match tab display "\t"
-hi link tab Error
-
 set number
-
 set backspace=indent,eol,start
 set incsearch
 set hlsearch
@@ -82,12 +87,29 @@ highlight ColorColumn guibg=#242526
 set undodir=~/.vim_other/_backup
 set undofile
 
+set cpoptions+=d
+set tags=./.tags;,~/.vimtags
+let g:easytags_events = ['BufReadPost', 'BufWritePost']
+let g:easytags_async = 1
+let g:easytags_dynamic_files = 2
+let g:easytags_resolve_links = 1
+let g:easytags_suppress_ctags_warning = 1
+let g:tagbar_autofocus = 1
+let g:tagbar_autoclose = 1
+map <C-s> :TagbarToggle<CR>
+
 let g:ycm_autoclose_preview_window_after_completion=1
 let g:ycm_collect_identifies_from_tags_files=1
 let g:ycm_confirm_extra_conf=0
-map <C-g>  :YcmCompleter GoTo<CR>
+map <C-g> :YcmCompleter GoTo<CR>
 
-let g:ctrlp_clear_cache_on_exit=0
+set wildmode=longest,list,full
+set wildmenu
+
+" let g:deoplete#enable_at_startup = 1
+" let g:deoplete#sources#clang#libclang_path = '/usr/lib/libclang.so'
+" let g:deoplete#sources#clang#clang_header = '/usr/lib/clang'
+" let g:deoplete#sources#clang#std#cpp = 'c++11'
 
 set wildignore+=*/tmp/*,*.so,*.swp,*.zip  " MacOSX/Linux
 let g:ctrlp_custom_ignore = {
@@ -95,12 +117,14 @@ let g:ctrlp_custom_ignore = {
   \ 'file': '\.exe$\|\.so$\|\.dll$',
   \ }
 
+let g:ctrlp_clear_cache_on_exit=0
 let g:ctrlp_max_files=0
 let g:ctrlp_max_depth=50
 let g:ctrlp_lazy_update=1
-
-set wildmode=longest,list,full
-set wildmenu
+let g:ctrlp_working_path_mode = 'r'
+let g:ctrlp_extensions = ['tag', 'buffertag', 'quickfix']
+map <C-t> :CtrlPTag<CR>
+map <C-[> :pop<CR>
 
 let $NVIM_TUI_ENABLE_CURSOR_SHAPE=1
 
@@ -124,20 +148,11 @@ function! SetCursorPosition()
   end
 endfunction
 
-"statusline setup
-"set laststatus=2
-"set statusline=%f       "tail of the filename
-"set statusline+=%h      "help file flag
-"set statusline+=%m      "modified flag
-"set statusline+=%r      "read only flag
-"set statusline+=%y      "filetype
-"set statusline+=%{fugitive#statusline()}    "git branch info
-"set statusline+=%=      "left/right separator
-"set statusline+=%c,     "cursor column
-"set statusline+=%l/%L   "cursor line/total lines
-"set statusline+=\ %P    "percent through file
-
 map <C-n> :NERDTreeToggle<CR>
+autocmd StdinReadPre * let s:std_in=1
+autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+let g:NERDTreeQuitOnOpen = 1
 
 let g:rainbow_active = 1
 
@@ -146,16 +161,39 @@ let g:syntastic_auto_loc_list = 1
 let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 1
 let g:syntastic_cpp_compiler_options = "-std=c++11 -Wall -Wextra -Wpedantic"
-
-set cpoptions+=d
-set tags=./.tags;,~/.vim/tags
-let g:easytags_events = ['BufReadPost', 'BufWritePost']
-let g:easytags_async = 1
-let g:easytags_dynamic_files = 2
-let g:easytags_resolve_links = 1
-let g:easytags_suppress_ctags_warning = 1
-let g:tagbar_autofocus = 1
-let g:tagbar_autoclose = 1
-map <C-t> :TagbarToggle<CR>
+"hack so syntastic doesn't check java files
+let g:loaded_syntastic_java_javac_checker = 1
 
 let g:airline#extensions#hunks#non_zero_only = 1
+let g:airline#extensions#tabline#enabled = 1
+let g:airline#extensions#tabline#fnamemod = ':t'
+
+let g:list_of_normal_keys = ["<UP>", "<DOWN>", "<LEFT>", "<RIGHT>"]
+let g:list_of_visual_keys = ["<UP>", "<DOWN>", "<LEFT>", "<RIGHT>"]
+let g:list_of_insert_keys = ["<UP>", "<DOWN>", "<LEFT>", "<RIGHT>"]
+let g:list_of_disabled_keys = []
+
+au BufReadPost *.pro set syntax=proguard
+
+" The Silver Searcher
+if executable('ag')
+  " Use ag over grep
+  set grepprg=ag\ --nogroup\ --nocolor
+  " Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
+  let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
+  " ag is fast enough that CtrlP doesn't need to cache
+  let g:ctrlp_use_caching = 0
+endif
+
+let g:go_highlight_functions = 1
+let g:go_highlight_methods = 1
+let g:go_highlight_fields = 1
+let g:go_highlight_types = 1
+let g:go_highlight_operators = 1
+let g:go_highlight_build_constraints = 1
+
+let g:android_sdk_path = '/Users/zacm/Library/Android/sdk'
+autocmd FileType java setlocal omnifunc=javacomplete#Complete
+
+map gh :bp<CR>
+map gl :bn<CR>

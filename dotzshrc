@@ -32,9 +32,6 @@ export UBER_HOME="$HOME/Uber"
 export UBER_OWNER="zacm@uber.com"
 export UBER_LDAP_UID="zacm"
 export VAGRANT_DEFAULT_PROVIDER=aws
-export ANDROID_HOME=/Users/zacm/Library/Android/sdk/
-export GOPATH="$HOME/gocode"
-export PATH="$PATH:$GOPATH/bin"
 
 path+=(/Users/zacm/bin)
 path+=(/Users/zacm/Library/Android/sdk/platform-tools)
@@ -63,12 +60,13 @@ opensync () {
     _sync_dir open @
 }
 
-path=(~/bin /usr/local/sbin /usr/local/bin $path)
-
 bindkey -v
 bindkey '\e[3~' delete-char
 bindkey '^R' history-incremental-search-backward
 
+export ANDROID_HOME=/Users/zacm/Library/Android/sdk/
+export GOPATH="$HOME/gocode"
+export PATH="$HOME/bin:$GOPATH/bin:$ANDROID_HOME/tools:/usr/local/sbin:/usr/local/bin/:$PATH"
 export TERM=xterm-256color
 export EDITOR=~/bin/vim
 export VISUAL=~/bin/vim
@@ -90,8 +88,6 @@ PERL5LIB="/Users/zacm/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB
 PERL_LOCAL_LIB_ROOT="/Users/zacm/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
 PERL_MB_OPT="--install_base \"/Users/zacm/perl5\""; export PERL_MB_OPT;
 PERL_MM_OPT="INSTALL_BASE=/Users/zacm/perl5"; export PERL_MM_OPT;
-
-alias bp='java -jar ~/bin/burp/burpsuite_pro_*.jar(om[1]) &'
 
 eval "$(thefuck --alias)"
 
