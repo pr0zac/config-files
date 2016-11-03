@@ -45,6 +45,7 @@ Plugin 'dkprice/vim-easygrep'
 " Plugin 'Shougo/deoplete.nvim'
 Plugin 'artur-shaik/vim-javacomplete2'
 Plugin 'hsanson/vim-android'
+Plugin 'blueyed/vim-diminactive'
 
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
@@ -83,10 +84,12 @@ set expandtab
 highlight CursorLine guibg=#232425
 set colorcolumn=81
 highlight ColorColumn guibg=#242526
+set cursorline
 
 set undodir=~/.vim_other/_backup
 set undofile
 
+" Setup tagging stuff
 set cpoptions+=d
 set tags=./.tags;,~/.vimtags
 let g:easytags_events = ['BufReadPost', 'BufWritePost']
@@ -98,11 +101,11 @@ let g:tagbar_autofocus = 1
 let g:tagbar_autoclose = 1
 map <C-s> :TagbarToggle<CR>
 
+" Setup YouCompleteMe
 let g:ycm_autoclose_preview_window_after_completion=1
 let g:ycm_collect_identifies_from_tags_files=1
 let g:ycm_confirm_extra_conf=0
 map <C-g> :YcmCompleter GoTo<CR>
-
 set wildmode=longest,list,full
 set wildmenu
 
@@ -117,6 +120,7 @@ let g:ctrlp_custom_ignore = {
   \ 'file': '\.exe$\|\.so$\|\.dll$',
   \ }
 
+" Ctrl-P configuration
 let g:ctrlp_clear_cache_on_exit=0
 let g:ctrlp_max_files=0
 let g:ctrlp_max_depth=50
@@ -126,6 +130,7 @@ let g:ctrlp_extensions = ['tag', 'buffertag', 'quickfix']
 map <C-t> :CtrlPTag<CR>
 map <C-[> :pop<CR>
 
+" Automatic cursor changing
 let $NVIM_TUI_ENABLE_CURSOR_SHAPE=1
 
 "Show leading whitespace that includes spaces, and trailing whitespace.
@@ -148,12 +153,14 @@ function! SetCursorPosition()
   end
 endfunction
 
+" Configure NERDTree stuff
 map <C-n> :NERDTreeToggle<CR>
 autocmd StdinReadPre * let s:std_in=1
 autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 let g:NERDTreeQuitOnOpen = 1
 
+" Activate rainbow {}s
 let g:rainbow_active = 1
 
 let g:syntastic_always_populate_loc_list = 1
@@ -168,11 +175,7 @@ let g:airline#extensions#hunks#non_zero_only = 1
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tabline#fnamemod = ':t'
 
-let g:list_of_normal_keys = ["<UP>", "<DOWN>", "<LEFT>", "<RIGHT>"]
-let g:list_of_visual_keys = ["<UP>", "<DOWN>", "<LEFT>", "<RIGHT>"]
-let g:list_of_insert_keys = ["<UP>", "<DOWN>", "<LEFT>", "<RIGHT>"]
-let g:list_of_disabled_keys = []
-
+" proguard file syntax highlighting
 au BufReadPost *.pro set syntax=proguard
 
 " The Silver Searcher
@@ -185,6 +188,7 @@ if executable('ag')
   let g:ctrlp_use_caching = 0
 endif
 
+" Golang specific settings
 let g:go_highlight_functions = 1
 let g:go_highlight_methods = 1
 let g:go_highlight_fields = 1
@@ -192,8 +196,21 @@ let g:go_highlight_types = 1
 let g:go_highlight_operators = 1
 let g:go_highlight_build_constraints = 1
 
+" Fix Java autocomplete
 let g:android_sdk_path = '/Users/zacm/Library/Android/sdk'
 autocmd FileType java setlocal omnifunc=javacomplete#Complete
+autocmd FileType java setlocal sw=4 sts=4 ts=4 expandtab
 
+" Buffer switching shortcuts
 map gh :bp<CR>
 map gl :bn<CR>
+
+" Fix page-up/page-down behavior
+nnoremap <silent> <PageUp> <C-U><C-U>
+vnoremap <silent> <PageUp> <C-U><C-U>
+inoremap <silent> <PageUp> <C-\><C-O><C-U><C-\><C-O><C-U>
+
+nnoremap <silent> <PageDown> <C-D><C-D>
+vnoremap <silent> <PageDown> <C-D><C-D>
+inoremap <silent> <PageDown> <C-\><C-O><C-D><C-\><C-O><C-D>
+
