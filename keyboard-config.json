@@ -309,10 +309,6 @@
                 "0": {
                     "key": "W",
                     "label": "W"
-                },
-                "2": {
-                    "key": "#:flashMode()",
-                    "label": "FLASH"
                 }
             }
         },
@@ -991,8 +987,8 @@
             "h": 4,
             "layers": {
                 "0": {
-                    "key": "FUN1",
-                    "label": "\u01921"
+                    "key": "RCTRL",
+                    "label": "RCTRL"
                 }
             }
         },
