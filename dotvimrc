@@ -35,17 +35,24 @@ Plugin 'vim-scripts/a.vim'
 Plugin 'airblade/vim-gitgutter'
 Plugin 'sheerun/vim-polyglot'
 Plugin 'Raimondi/delimitMate'
-Plugin 'Valloric/YouCompleteMe'
-Plugin 'rdnetto/YCM-Generator'
+"Plugin 'Valloric/YouCompleteMe'
+"Plugin 'rdnetto/YCM-Generator'
 Plugin 'tpope/vim-commentary'
-Plugin 'neilagabriel/vim-geeknote'
+" Plugin 'neilagabriel/vim-geeknote'
 Plugin 'takac/vim-hardtime'
 Plugin 'vim-scripts/proguard.vim'
 Plugin 'dkprice/vim-easygrep'
 " Plugin 'Shougo/deoplete.nvim'
-Plugin 'artur-shaik/vim-javacomplete2'
-Plugin 'hsanson/vim-android'
+" Plugin 'artur-shaik/vim-javacomplete2'
+" Plugin 'hsanson/vim-android'
 Plugin 'blueyed/vim-diminactive'
+Plugin 'tomlion/vim-solidity'
+Plugin 'roxma/python-support.nvim'
+Plugin 'roxma/nvim-completion-manager'
+Plugin 'ervandew/supertab'
+Plugin 'Shougo/vimproc.vim'
+Plugin 'leafgarland/typescript-vim'
+Plugin 'Quramy/tsuquyomi'
 
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
@@ -57,7 +64,12 @@ hi link tab Error
 let $NVIM_TUI_ENABLE_TRUE_COLOR=1
 let g:rehash256=1
 colorscheme molokai
-hi Normal ctermfg=255
+hi Normal ctermfg=255 guifg=#FFFFFF
+
+autocmd BufReadPost,BufNewFile * call SetOniColors()
+function! SetOniColors()
+   hi Search guibg=grey guifg=white
+endfunction
 
 "dear f1 key, please go fuck yourself, sincerely zac
 inoremap <f1> <esc>
@@ -82,7 +94,7 @@ set shiftwidth=2
 set expandtab
 
 highlight CursorLine guibg=#232425
-set colorcolumn=81
+set colorcolumn=101
 highlight ColorColumn guibg=#242526
 set cursorline
 
@@ -102,12 +114,18 @@ let g:tagbar_autoclose = 1
 map <C-s> :TagbarToggle<CR>
 
 " Setup YouCompleteMe
-let g:ycm_autoclose_preview_window_after_completion=1
-let g:ycm_collect_identifies_from_tags_files=1
-let g:ycm_confirm_extra_conf=0
-map <C-g> :YcmCompleter GoTo<CR>
+"let g:ycm_autoclose_preview_window_after_completion=1
+"let g:ycm_collect_identifies_from_tags_files=1
+"let g:ycm_confirm_extra_conf=0
+"map <C-g> :YcmCompleter GoTo<CR>
 set wildmode=longest,list,full
 set wildmenu
+
+set completeopt+=longest
+let g:SuperTabLongestEnhanced              = 1
+let g:SuperTabLongestHighlight             = 1
+let g:SuperTabDefaultCompletionType        = "<c-n>"
+let g:SuperTabContextDefaultCompletionType = "<c-n>"
 
 " let g:deoplete#enable_at_startup = 1
 " let g:deoplete#sources#clang#libclang_path = '/usr/lib/libclang.so'
@@ -156,7 +174,7 @@ endfunction
 " Configure NERDTree stuff
 map <C-n> :NERDTreeToggle<CR>
 autocmd StdinReadPre * let s:std_in=1
-autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
+" autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 let g:NERDTreeQuitOnOpen = 1
 
@@ -174,9 +192,9 @@ let g:loaded_syntastic_java_javac_checker = 1
 let g:airline#extensions#hunks#non_zero_only = 1
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tabline#fnamemod = ':t'
-
-" proguard file syntax highlighting
-au BufReadPost *.pro set syntax=proguard
+let g:airline_theme='dark'
+set laststatus=2
+set ttimeoutlen=50
 
 " The Silver Searcher
 if executable('ag')
@@ -195,6 +213,7 @@ let g:go_highlight_fields = 1
 let g:go_highlight_types = 1
 let g:go_highlight_operators = 1
 let g:go_highlight_build_constraints = 1
+au FileType go setlocal sw=4 sts=4 ts=4 noexpandtab
 
 " Fix Java autocomplete
 let g:android_sdk_path = '/Users/zacm/Library/Android/sdk'
@@ -214,3 +233,7 @@ nnoremap <silent> <PageDown> <C-D><C-D>
 vnoremap <silent> <PageDown> <C-D><C-D>
 inoremap <silent> <PageDown> <C-\><C-O><C-D><C-\><C-O><C-D>
 
+" Solidity tabbing
+au FileType solidity setlocal sw=4 sts=4 ts=4 expandtab
+
+let g:tsuquyomi_completion_detail = 1
