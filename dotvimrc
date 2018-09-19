@@ -61,15 +61,6 @@ filetype plugin indent on    " required
 syntax on
 syn match tab display "\t"
 hi link tab Error
-let $NVIM_TUI_ENABLE_TRUE_COLOR=1
-let g:rehash256=1
-colorscheme molokai
-hi Normal ctermfg=255 guifg=#FFFFFF
-
-autocmd BufReadPost,BufNewFile * call SetOniColors()
-function! SetOniColors()
-   hi Search guibg=grey guifg=white
-endfunction
 
 "dear f1 key, please go fuck yourself, sincerely zac
 inoremap <f1> <esc>
@@ -152,12 +143,14 @@ map <C-[> :pop<CR>
 let $NVIM_TUI_ENABLE_CURSOR_SHAPE=1
 
 "Show leading whitespace that includes spaces, and trailing whitespace.
+autocmd ColorScheme * highlight ExtraWhitespace ctermbg=red guibg=red
 highlight ExtraWhitespace ctermbg=red guibg=red
 match ExtraWhitespace /\s\+$/
 autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
 autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
 autocmd InsertLeave * match ExtraWhitespace /\s\+$/
 autocmd BufWinLeave * call clearmatches()
+map gs :%s/\s\+$//e<CR>
 
 "jump to last cursor position when opening a file
 "dont do it when writing a commit log entry
@@ -237,3 +230,15 @@ inoremap <silent> <PageDown> <C-\><C-O><C-D><C-\><C-O><C-D>
 au FileType solidity setlocal sw=4 sts=4 ts=4 expandtab
 
 let g:tsuquyomi_completion_detail = 1
+
+" set color stuff last
+let $NVIM_TUI_ENABLE_TRUE_COLOR=1
+let g:rehash256=1
+colorscheme molokai
+hi Normal ctermfg=255 guifg=#FFFFFF
+
+autocmd BufReadPost,BufNewFile * call SetOniColors()
+function! SetOniColors()
+   hi Search guibg=grey guifg=white
+endfunction
+
