@@ -35,24 +35,31 @@ Plugin 'vim-scripts/a.vim'
 Plugin 'airblade/vim-gitgutter'
 Plugin 'sheerun/vim-polyglot'
 Plugin 'Raimondi/delimitMate'
-"Plugin 'Valloric/YouCompleteMe'
-"Plugin 'rdnetto/YCM-Generator'
 Plugin 'tpope/vim-commentary'
-" Plugin 'neilagabriel/vim-geeknote'
 Plugin 'takac/vim-hardtime'
 Plugin 'vim-scripts/proguard.vim'
 Plugin 'dkprice/vim-easygrep'
-" Plugin 'Shougo/deoplete.nvim'
-" Plugin 'artur-shaik/vim-javacomplete2'
-" Plugin 'hsanson/vim-android'
 Plugin 'blueyed/vim-diminactive'
 Plugin 'tomlion/vim-solidity'
 Plugin 'roxma/python-support.nvim'
-Plugin 'roxma/nvim-completion-manager'
-Plugin 'ervandew/supertab'
 Plugin 'Shougo/vimproc.vim'
 Plugin 'leafgarland/typescript-vim'
-" Plugin 'Quramy/tsuquyomi'
+Plugin 'patstockwell/vim-monokai-tasty'
+Plugin 'pangloss/vim-javascript'
+Plugin 'mxw/vim-jsx'
+Plugin 'styled-components/vim-styled-components'
+Plugin 'elzr/vim-json'
+
+if !exists('g:gui_oni')
+  Plugin 'ervandew/supertab'
+  Plugin 'roxma/nvim-yarp'
+  Plugin 'ncm2/ncm2'
+  Plugin 'ncm2/ncm2-bufword'
+  Plugin 'ncm2/ncm2-path'
+  Plugin 'ncm2/ncm2-tagprefix'
+  Plugin 'ncm2/ncm2-syntax'
+  Plugin 'Shougo/neco-syntax'
+endif
 
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
@@ -104,24 +111,25 @@ let g:tagbar_autofocus = 1
 let g:tagbar_autoclose = 1
 map <C-s> :TagbarToggle<CR>
 
-" Setup YouCompleteMe
-"let g:ycm_autoclose_preview_window_after_completion=1
-"let g:ycm_collect_identifies_from_tags_files=1
-"let g:ycm_confirm_extra_conf=0
-"map <C-g> :YcmCompleter GoTo<CR>
-set wildmode=longest,list,full
-set wildmenu
+if !exists('g:gui_oni')
+  " Setup YouCompleteMe
+  "let g:ycm_autoclose_preview_window_after_completion=1
+  "let g:ycm_collect_identifies_from_tags_files=1
+  "let g:ycm_confirm_extra_conf=0
+  "map <C-g> :YcmCompleter GoTo<CR>
+  set wildmode=longest,list,full
+  set wildmenu
 
-set completeopt+=longest
-let g:SuperTabLongestEnhanced              = 1
-let g:SuperTabLongestHighlight             = 1
-let g:SuperTabDefaultCompletionType        = "<c-n>"
-let g:SuperTabContextDefaultCompletionType = "<c-n>"
+  let g:SuperTabLongestEnhanced              = 1
+  let g:SuperTabLongestHighlight             = 1
+  let g:SuperTabDefaultCompletionType        = "<c-n>"
+  let g:SuperTabContextDefaultCompletionType = "<c-n>"
 
-" let g:deoplete#enable_at_startup = 1
-" let g:deoplete#sources#clang#libclang_path = '/usr/lib/libclang.so'
-" let g:deoplete#sources#clang#clang_header = '/usr/lib/clang'
-" let g:deoplete#sources#clang#std#cpp = 'c++11'
+  " enable ncm2 for all buffers
+  autocmd BufEnter * call ncm2#enable_for_buffer()
+  " IMPORTANT: :help Ncm2PopupOpen for more information
+  set completeopt=noinsert,menuone,noselect
+endif
 
 set wildignore+=*/tmp/*,*.so,*.swp,*.zip  " MacOSX/Linux
 let g:ctrlp_custom_ignore = {
@@ -237,8 +245,6 @@ let g:rehash256=1
 colorscheme molokai
 hi Normal ctermfg=255 guifg=#FFFFFF
 
-autocmd BufReadPost,BufNewFile * call SetOniColors()
-function! SetOniColors()
-   hi Search guibg=grey guifg=white
-endfunction
-
+if exists('g:gui_oni')
+  hi Search guibg=grey guifg=white
+endif
