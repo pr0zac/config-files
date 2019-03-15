@@ -59,6 +59,7 @@ if !exists('g:gui_oni')
   Plugin 'ncm2/ncm2-tagprefix'
   Plugin 'ncm2/ncm2-syntax'
   Plugin 'Shougo/neco-syntax'
+  Plugin 'Quramy/tsuquyomi'
 endif
 
 " All of your Plugins must be added before the following line
@@ -91,27 +92,25 @@ set tabstop=2
 set shiftwidth=2
 set expandtab
 
+set undodir=~/.vim_other/_backup
+set undofile
+
+let $NVIM_TUI_ENABLE_TRUE_COLOR=1
+let g:rehash256=1
+colorscheme molokai
+hi Normal ctermfg=255 guifg=#FFFFFF
+hi Search ctermbg=yellow ctermfg=black
 highlight CursorLine guibg=#232425
 set colorcolumn=101
 highlight ColorColumn guibg=#242526
 set cursorline
 
-set undodir=~/.vim_other/_backup
-set undofile
-
-" Setup tagging stuff
-set cpoptions+=d
-set tags=./.tags;,~/.vimtags
-let g:easytags_events = ['BufReadPost', 'BufWritePost']
-let g:easytags_async = 1
-let g:easytags_dynamic_files = 2
-let g:easytags_resolve_links = 1
-let g:easytags_suppress_ctags_warning = 1
-let g:tagbar_autofocus = 1
-let g:tagbar_autoclose = 1
-map <C-s> :TagbarToggle<CR>
-
-if !exists('g:gui_oni')
+if exists('g:gui_oni')
+  autocmd BufReadPost,BufNewFile * call SetOniColors()
+  function! SetOniColors()
+    hi Search guibg=#FEF186 guifg=#111111
+  endfunction
+else
   " Setup YouCompleteMe
   "let g:ycm_autoclose_preview_window_after_completion=1
   "let g:ycm_collect_identifies_from_tags_files=1
@@ -130,6 +129,18 @@ if !exists('g:gui_oni')
   " IMPORTANT: :help Ncm2PopupOpen for more information
   set completeopt=noinsert,menuone,noselect
 endif
+
+" Setup tagging stuff
+set cpoptions+=d
+set tags=./.tags;,~/.vimtags
+let g:easytags_events = ['BufReadPost', 'BufWritePost']
+let g:easytags_async = 1
+let g:easytags_dynamic_files = 2
+let g:easytags_resolve_links = 1
+let g:easytags_suppress_ctags_warning = 1
+let g:tagbar_autofocus = 1
+let g:tagbar_autoclose = 1
+map <C-s> :TagbarToggle<CR>
 
 set wildignore+=*/tmp/*,*.so,*.swp,*.zip  " MacOSX/Linux
 let g:ctrlp_custom_ignore = {
@@ -234,17 +245,5 @@ nnoremap <silent> <PageDown> <C-D><C-D>
 vnoremap <silent> <PageDown> <C-D><C-D>
 inoremap <silent> <PageDown> <C-\><C-O><C-D><C-\><C-O><C-D>
 
-" Solidity tabbing
-au FileType solidity setlocal sw=4 sts=4 ts=4 expandtab
-
 let g:tsuquyomi_completion_detail = 1
 
-" set color stuff last
-let $NVIM_TUI_ENABLE_TRUE_COLOR=1
-let g:rehash256=1
-colorscheme molokai
-hi Normal ctermfg=255 guifg=#FFFFFF
-
-if exists('g:gui_oni')
-  hi Search guibg=grey guifg=white
-endif
