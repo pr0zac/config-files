@@ -9,11 +9,12 @@ const activate = oni => {
     //
     // Add input bindings here:
     //
-    oni.input.bind("<f11>", "oni.debug.openDevTools")
-    oni.input.bind("<c-enter>", () => console.log("Control+Enter was pressed"))
+    oni.input.bind("<c-f11>", "oni.debug.openDevTools")
+    // oni.input.bind("<c-enter>", () => console.log("Control+Enter was pressed"))
     oni.input.bind(["<enter>"], "contextMenu.select");
     oni.input.bind(["<tab>"], "contextMenu.next");
     oni.input.bind(["<s-tab>"], "contextMenu.previous");
+    oni.input.bind(["<c-j>"], "language.gotoDefinition");
 
     //
     // Or remove the default bindings:
@@ -43,5 +44,6 @@ module.exports = {
 
     "sidebar.enabled": false,
     "statusbar.enabled": false,
+    "tabs.mode": "native",
 }
 
