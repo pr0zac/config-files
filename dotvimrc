@@ -72,6 +72,7 @@ set backspace=indent,eol,start
 set incsearch
 set hlsearch
 set clipboard=unnamedplus
+set nomodeline
 
 set history=1000
 set showbreak=...
@@ -141,7 +142,7 @@ let g:ctrlp_max_depth=50
 let g:ctrlp_lazy_update=1
 let g:ctrlp_working_path_mode = 'r'
 let g:ctrlp_extensions = ['tag', 'buffertag', 'quickfix']
-map <C-t> :CtrlPTag<CR>
+" map <C-t> :CtrlPTag<CR>
 map <C-[> :pop<CR>
 
 " Automatic cursor changing
