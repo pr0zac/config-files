@@ -8,7 +8,8 @@ call vundle#begin()
 Plugin 'VundleVim/Vundle.vim'
 
 " My Bundles here:
-Plugin 'tomasr/molokai'
+" Plugin 'tomasr/molokai'
+Plugin 'sonph/onehalf', {'rtp': 'vim/'}
 Plugin 'ctrlpvim/ctrlp.vim'
 Plugin 'scrooloose/syntastic'
 Plugin 'luochen1990/rainbow'
@@ -41,6 +42,7 @@ Plugin 'styled-components/vim-styled-components'
 Plugin 'elzr/vim-json'
 Plugin 'jparise/vim-graphql'
 Plugin 'HerringtonDarkholme/yats.vim'
+Plugin 'ianks/vim-tsx'
 
 if !exists('g:gui_oni')
   Plugin 'ervandew/supertab'
@@ -51,7 +53,9 @@ if !exists('g:gui_oni')
   Plugin 'ncm2/ncm2-path'
   Plugin 'ncm2/ncm2-tagprefix'
   Plugin 'ncm2/ncm2-syntax'
-  Plugin 'mhartington/nvim-typescript'
+  " Plugin 'mhartington/nvim-typescript'
+  Plugin 'leafgarland/typescript-vim'
+  Plugin 'peitalin/vim-jsx-typescript'
 endif
 
 " All of your Plugins must be added before the following line
@@ -88,15 +92,24 @@ set expandtab
 set undodir=~/.vim_other/_backup
 set undofile
 
-let $NVIM_TUI_ENABLE_TRUE_COLOR=1
-let g:rehash256=1
-colorscheme molokai
-hi Normal ctermfg=255 guifg=#FFFFFF
-hi Search ctermbg=yellow ctermfg=black
-highlight CursorLine guibg=#232425
-set colorcolumn=101
-highlight ColorColumn guibg=#242526
+set t_Co=256
 set cursorline
+set colorcolumn=101
+colorscheme onehalfdark
+if exists('+termguicolors')
+  let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+  let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+  set termguicolors
+endif
+" let $NVIM_TUI_ENABLE_TRUE_COLOR=1
+" let g:rehash256=1
+" colorscheme molokai
+" hi Normal ctermfg=255 guifg=#FFFFFF
+" hi Search ctermbg=yellow ctermfg=black
+" highlight CursorLine guibg=#232425
+" set colorcolumn=101
+" highlight ColorColumn guibg=#242526
+" set cursorline
 
 if exists('g:gui_oni')
   autocmd BufReadPost,BufNewFile * call SetOniColors()
@@ -191,7 +204,7 @@ let g:loaded_syntastic_java_javac_checker = 1
 let g:airline#extensions#hunks#non_zero_only = 1
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tabline#fnamemod = ':t'
-let g:airline_theme='dark'
+let g:airline_theme='onehalfdark'
 set laststatus=2
 set ttimeoutlen=50
 

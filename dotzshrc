@@ -67,13 +67,7 @@ alias ls='ls -G -F'
 
 fpath=(/usr/local/share/zsh-completions $fpath)
 
-export THEOS=~/bin/theos
-export PATH=$THEOS/bin:$PATH
-export THEOS_DEVICE_IP=10.0.1.7 THEOS_DEVICE_PORT=22
-
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
-
-export HOMEBREW_GITHUB_API_TOKEN=''
 
 zle-keymap-select () {
     if [ "$TERM" = "xterm-256color" ]; then
