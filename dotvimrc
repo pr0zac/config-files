@@ -10,6 +10,7 @@ Plugin 'VundleVim/Vundle.vim'
 " My Bundles here:
 " Plugin 'tomasr/molokai'
 Plugin 'sonph/onehalf', {'rtp': 'vim/'}
+Plugin 'qpkorr/vim-bufkill'
 Plugin 'ctrlpvim/ctrlp.vim'
 Plugin 'scrooloose/syntastic'
 Plugin 'luochen1990/rainbow'
@@ -27,7 +28,6 @@ Plugin 'xolox/vim-easytags'
 Plugin 'majutsushi/tagbar'
 Plugin 'vim-scripts/a.vim'
 Plugin 'airblade/vim-gitgutter'
-Plugin 'sheerun/vim-polyglot'
 Plugin 'Raimondi/delimitMate'
 Plugin 'tpope/vim-commentary'
 Plugin 'takac/vim-hardtime'
@@ -37,14 +37,21 @@ Plugin 'blueyed/vim-diminactive'
 Plugin 'tomlion/vim-solidity'
 Plugin 'Shougo/vimproc.vim'
 Plugin 'pangloss/vim-javascript'
-Plugin 'mxw/vim-jsx'
 Plugin 'styled-components/vim-styled-components'
 Plugin 'elzr/vim-json'
 Plugin 'jparise/vim-graphql'
 Plugin 'HerringtonDarkholme/yats.vim'
+Plugin 'mxw/vim-jsx'
 Plugin 'ianks/vim-tsx'
+Plugin 'leafgarland/typescript-vim'
+Plugin 'peitalin/vim-jsx-typescript'
+Plugin 'maxmellon/vim-jsx-pretty'
+Plugin 'sheerun/vim-polyglot'
+
+let g:polyglot_disabled = ['jsx']
 
 if !exists('g:gui_oni')
+  Plugin 'Yggdroot/indentLine'
   Plugin 'ervandew/supertab'
   Plugin 'Shougo/neco-syntax'
   Plugin 'roxma/nvim-yarp'
@@ -54,8 +61,6 @@ if !exists('g:gui_oni')
   Plugin 'ncm2/ncm2-tagprefix'
   Plugin 'ncm2/ncm2-syntax'
   " Plugin 'mhartington/nvim-typescript'
-  Plugin 'leafgarland/typescript-vim'
-  Plugin 'peitalin/vim-jsx-typescript'
 endif
 
 " All of your Plugins must be added before the following line
@@ -94,7 +99,7 @@ set undofile
 
 set t_Co=256
 set cursorline
-set colorcolumn=101
+set colorcolumn=81
 colorscheme onehalfdark
 if exists('+termguicolors')
   let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
@@ -235,6 +240,7 @@ autocmd FileType java setlocal sw=4 sts=4 ts=4 expandtab
 " Buffer switching shortcuts
 map gh :bp<CR>
 map gl :bn<CR>
+map gq :BD<CR>
 
 " Fix page-up/page-down behavior
 nnoremap <silent> <PageUp> <C-U><C-U>

@@ -30,13 +30,13 @@ module.exports = {
     activate,
     deactivate,
     //add custom config here, such as
-    "ui.colorscheme": "molokai",
+    "ui.colorscheme": "onehalfdark",
 
     "oni.useDefaultConfig": false,
     //"oni.bookmarks": ["~/Documents"],
     "oni.loadInitVim": true,
     "editor.fontSize": "11px",
-    "editor.fontFamily": "HackNerdFontComplete-Bold",
+    "editor.fontFamily": "FiraCode-Bold",
 
     // UI customizations
     "ui.animations.enabled": true,
@@ -45,5 +45,7 @@ module.exports = {
     "sidebar.enabled": false,
     "statusbar.enabled": false,
     "tabs.mode": "native",
+
+    "experimental.indentLines.enabled": true,
 }
 
