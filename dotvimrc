@@ -44,7 +44,6 @@ Plugin 'HerringtonDarkholme/yats.vim'
 Plugin 'mxw/vim-jsx'
 Plugin 'ianks/vim-tsx'
 Plugin 'leafgarland/typescript-vim'
-Plugin 'peitalin/vim-jsx-typescript'
 Plugin 'maxmellon/vim-jsx-pretty'
 Plugin 'sheerun/vim-polyglot'
 
@@ -61,7 +60,9 @@ if !exists('g:gui_oni')
   Plugin 'ncm2/ncm2-tagprefix'
   Plugin 'ncm2/ncm2-syntax'
   " Plugin 'mhartington/nvim-typescript'
+  Plugin 'peitalin/vim-jsx-typescript'
 endif
+
 
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
