@@ -40,12 +40,13 @@ Plugin 'pangloss/vim-javascript'
 Plugin 'styled-components/vim-styled-components'
 Plugin 'elzr/vim-json'
 Plugin 'jparise/vim-graphql'
-Plugin 'HerringtonDarkholme/yats.vim'
+Plugin 'vim-scripts/dbext.vim'
 Plugin 'mxw/vim-jsx'
 Plugin 'ianks/vim-tsx'
 Plugin 'leafgarland/typescript-vim'
 Plugin 'maxmellon/vim-jsx-pretty'
 Plugin 'sheerun/vim-polyglot'
+
 
 let g:polyglot_disabled = ['jsx']
 
@@ -59,8 +60,11 @@ if !exists('g:gui_oni')
   Plugin 'ncm2/ncm2-path'
   Plugin 'ncm2/ncm2-tagprefix'
   Plugin 'ncm2/ncm2-syntax'
-  " Plugin 'mhartington/nvim-typescript'
   Plugin 'peitalin/vim-jsx-typescript'
+  Plugin 'mhartington/nvim-typescript'
+  Plugin 'Shougo/deoplete.nvim'
+  Plugin 'Shougo/denite.nvim'
+  let g:deoplete#enable_at_startup = 1
 endif
 
 
@@ -251,6 +255,4 @@ inoremap <silent> <PageUp> <C-\><C-O><C-U><C-\><C-O><C-U>
 nnoremap <silent> <PageDown> <C-D><C-D>
 vnoremap <silent> <PageDown> <C-D><C-D>
 inoremap <silent> <PageDown> <C-\><C-O><C-D><C-\><C-O><C-D>
-
-let g:tsuquyomi_completion_detail = 1
 
