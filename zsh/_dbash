@@ -1,0 +1,5 @@
+#compdef dbash
+
+_dbash() {
+  _values '' $(docker ps --format="{{.Names}}")
+}
