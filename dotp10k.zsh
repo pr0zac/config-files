@@ -14,7 +14,7 @@
 if [[ -o 'aliases' ]]; then
   # Temporarily disable aliases.
   'builtin' 'unsetopt' 'aliases'
-  local p9k_classic_restore_aliases=1
+  local p9k_classic_restore_aliases=9
 else
   local p9k_classic_restore_aliases=0
 fi
@@ -179,7 +179,7 @@ fi
   # Green prompt symbol if the last command succeeded.
   typeset -g POWERLEVEL9K_PROMPT_CHAR_OK_{VIINS,VICMD,VIVIS}_FOREGROUND=10
   # Red prompt symbol if the last command failed.
-  typeset -g POWERLEVEL9K_PROMPT_CHAR_ERROR_{VIINS,VICMD,VIVIS}_FOREGROUND=1
+  typeset -g POWERLEVEL9K_PROMPT_CHAR_ERROR_{VIINS,VICMD,VIVIS}_FOREGROUND=9
   # Default prompt symbol.
   typeset -g POWERLEVEL9K_PROMPT_CHAR_{OK,ERROR}_VIINS_CONTENT_EXPANSION='❯'
   # Prompt symbol in command vi mode.
@@ -223,7 +223,7 @@ fi
   )
   typeset -g POWERLEVEL9K_SHORTEN_FOLDER_MARKER="(${(j:|:)anchor_files})"
   # Don't shorten this many last directory segments. They are anchors.
-  typeset -g POWERLEVEL9K_SHORTEN_DIR_LENGTH=1
+  typeset -g POWERLEVEL9K_SHORTEN_DIR_LENGTH=9
   # Shorten directory if it's longer than this even if there is space for it. The value can
   # be either absolute (e.g., '80') or a percentage of terminal width (e.g, '50%'). If empty,
   # directory will be shortened only when prompt doesn't fit.
@@ -300,38 +300,38 @@ fi
   # https://github.com/romkatv/gitstatus/blob/master/gitstatus.plugin.zsh.
   local vcs=''
   # If on a branch...
-    vcs+='${${VCS_STATUS_LOCAL_BRANCH:+%13F'${(g::)POWERLEVEL9K_VCS_BRANCH_ICON}
+    vcs+='${${VCS_STATUS_LOCAL_BRANCH:+%9F'${(g::)POWERLEVEL9K_VCS_BRANCH_ICON}
   # If local branch name is at most 32 characters long, show it in full.
   # This is the equivalent of POWERLEVEL9K_VCS_SHORTEN_MIN_LENGTH=32.
   vcs+='${${${$(($#VCS_STATUS_LOCAL_BRANCH<=32)):#0}:+${VCS_STATUS_LOCAL_BRANCH//\%/%%}}'
   # If local branch name is over 32 characters long, show the first 12 … the last 12. The same as
   # POWERLEVEL9K_VCS_SHORTEN_LENGTH=12 with POWERLEVEL9K_VCS_SHORTEN_STRATEGY=truncate_middle.
-  vcs+=':-${VCS_STATUS_LOCAL_BRANCH[1,12]//\%/%%}%28F…%13F${VCS_STATUS_LOCAL_BRANCH[-12,-1]//\%/%%}}}'
+  vcs+=':-${VCS_STATUS_LOCAL_BRANCH[1,12]//\%/%%}%28F…%9F${VCS_STATUS_LOCAL_BRANCH[-12,-1]//\%/%%}}}'
   # '@72f5c8a' if not on a branch.
-  vcs+=':-%7F@%13F${VCS_STATUS_COMMIT[1,8]}}'
+  vcs+=':-%7F@%9F${VCS_STATUS_COMMIT[1,8]}}'
   # ':master' if the tracking branch name differs from local branch.
-  vcs+='${${VCS_STATUS_REMOTE_BRANCH:#$VCS_STATUS_LOCAL_BRANCH}:+%7F:%13F${VCS_STATUS_REMOTE_BRANCH//\%/%%}}'
+  vcs+='${${VCS_STATUS_REMOTE_BRANCH:#$VCS_STATUS_LOCAL_BRANCH}:+%7F:%9F${VCS_STATUS_REMOTE_BRANCH//\%/%%}}'
   # '#tag' if on a tag.
-  vcs+='${VCS_STATUS_TAG:+%7F#%13F${VCS_STATUS_TAG//\%/%%}}'
+  vcs+='${VCS_STATUS_TAG:+%7F#%9F${VCS_STATUS_TAG//\%/%%}}'
   # ⇣42 if behind the remote.
-  vcs+='${${VCS_STATUS_COMMITS_BEHIND:#0}:+ %13F⇣${VCS_STATUS_COMMITS_BEHIND}}'
+  vcs+='${${VCS_STATUS_COMMITS_BEHIND:#0}:+ %9F⇣${VCS_STATUS_COMMITS_BEHIND}}'
   # ⇡42 if ahead of the remote; no leading space if also behind the remote: ⇣42⇡42.
   # If you want '⇣42 ⇡42' instead, replace '${${(M)VCS_STATUS_COMMITS_BEHIND:#0}:+ }' with ' '.
-  vcs+='${${VCS_STATUS_COMMITS_AHEAD:#0}:+${${(M)VCS_STATUS_COMMITS_BEHIND:#0}:+ }%13F⇡${VCS_STATUS_COMMITS_AHEAD}}'
+  vcs+='${${VCS_STATUS_COMMITS_AHEAD:#0}:+${${(M)VCS_STATUS_COMMITS_BEHIND:#0}:+ }%7F⇡${VCS_STATUS_COMMITS_AHEAD}}'
   # *42 if have stashes.
-  # vcs+='${${VCS_STATUS_STASHES:#0}:+ %13F*${VCS_STATUS_STASHES}}'
+  # vcs+='${${VCS_STATUS_STASHES:#0}:+ %11F*${VCS_STATUS_STASHES}}'
   # 'merge' if the repo is in an unusual state.
-  vcs+='${VCS_STATUS_ACTION:+ %1F${VCS_STATUS_ACTION//\%/%%}}'
+  vcs+='${VCS_STATUS_ACTION:+ %11F${VCS_STATUS_ACTION//\%/%%}}'
   # ~42 if have merge conflicts.
   vcs+='${${VCS_STATUS_NUM_CONFLICTED:#0}:+ %9F~${VCS_STATUS_NUM_CONFLICTED}}'
   # +42 if have staged changes.
-  vcs+='${${VCS_STATUS_NUM_STAGED:#0}:+ %1F+${VCS_STATUS_NUM_STAGED}}'
+  vcs+='${${VCS_STATUS_NUM_STAGED:#0}:+ %14F+${VCS_STATUS_NUM_STAGED}}'
   # !42 if have unstaged changes.
-  vcs+='${${VCS_STATUS_NUM_UNSTAGED:#0}:+ %1F!${VCS_STATUS_NUM_UNSTAGED}}'
+  vcs+='${${VCS_STATUS_NUM_UNSTAGED:#0}:+ %11F!${VCS_STATUS_NUM_UNSTAGED}}'
   # ?42 if have untracked files. It's really a question mark, your font isn't broken.
   # See POWERLEVEL9K_VCS_UNTRACKED_ICON below if you want to use a different icon.
   # Remove the next line if you don't want to see untracked files at all.
-  vcs+='${${VCS_STATUS_NUM_UNTRACKED:#0}:+ %12F'${(g::)POWERLEVEL9K_VCS_UNTRACKED_ICON}'${VCS_STATUS_NUM_UNTRACKED}}'
+  vcs+='${${VCS_STATUS_NUM_UNTRACKED:#0}:+ %13F'${(g::)POWERLEVEL9K_VCS_UNTRACKED_ICON}'${VCS_STATUS_NUM_UNTRACKED}}'
   # If P9K_CONTENT is not empty, leave it unchanged. It's either "loading" or from vcs_info.
   vcs="\${P9K_CONTENT:-$vcs}"
 
@@ -356,12 +356,12 @@ fi
   # isn't in an svn or hg reposotiry.
   typeset -g POWERLEVEL9K_VCS_BACKENDS=(git)
 
-  typeset -g POWERLEVEL9K_VCS_LOADING_FOREGROUND=12
+  typeset -g POWERLEVEL9K_VCS_LOADING_FOREGROUND=9
   # These settings are used for respositories other than Git or when gitstatusd fails and
   # Powerlevel10k has to fall back to using vcs_info.
-  typeset -g POWERLEVEL9K_VCS_CLEAN_FOREGROUND=12
-  typeset -g POWERLEVEL9K_VCS_UNTRACKED_FOREGROUND=12
-  typeset -g POWERLEVEL9K_VCS_MODIFIED_FOREGROUND=1
+  typeset -g POWERLEVEL9K_VCS_CLEAN_FOREGROUND=9
+  typeset -g POWERLEVEL9K_VCS_UNTRACKED_FOREGROUND=13
+  typeset -g POWERLEVEL9K_VCS_MODIFIED_FOREGROUND=11
 
   ##########################[ status: exit code of the last command ]###########################
   # Enable OK_PIPE, ERROR_PIPE and ERROR_SIGNAL status states to allow us to enable, disable and
@@ -383,12 +383,12 @@ fi
   # Status when it's just an error code (e.g., '1'). No need to show it if prompt_char is enabled as
   # it will signify error by turning red.
   typeset -g POWERLEVEL9K_STATUS_ERROR=true
-  typeset -g POWERLEVEL9K_STATUS_ERROR_FOREGROUND=1
+  typeset -g POWERLEVEL9K_STATUS_ERROR_FOREGROUND=9
   typeset -g POWERLEVEL9K_STATUS_ERROR_VISUAL_IDENTIFIER_EXPANSION='↵'
 
   # Status when the last command was terminated by a signal.
   typeset -g POWERLEVEL9K_STATUS_ERROR_SIGNAL=true
-  typeset -g POWERLEVEL9K_STATUS_ERROR_SIGNAL_FOREGROUND=1
+  typeset -g POWERLEVEL9K_STATUS_ERROR_SIGNAL_FOREGROUND=9
   # Use terse signal names: "INT" instead of "SIGINT(2)".
   typeset -g POWERLEVEL9K_STATUS_VERBOSE_SIGNAME=false
   typeset -g POWERLEVEL9K_STATUS_ERROR_SIGNAL_VISUAL_IDENTIFIER_EXPANSION='↵'
@@ -396,7 +396,7 @@ fi
   # Status when some part of a pipe command fails and the overall exit status is also non-zero.
   # It may look like this: 1|0.
   typeset -g POWERLEVEL9K_STATUS_ERROR_PIPE=true
-  typeset -g POWERLEVEL9K_STATUS_ERROR_PIPE_FOREGROUND=1
+  typeset -g POWERLEVEL9K_STATUS_ERROR_PIPE_FOREGROUND=9
   typeset -g POWERLEVEL9K_STATUS_ERROR_PIPE_VISUAL_IDENTIFIER_EXPANSION='↵'
 
   ###################[ command_execution_time: duration of the last command ]###################
@@ -404,9 +404,9 @@ fi
   # Show duration of the last command if takes longer than this many seconds.
   typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_THRESHOLD=0
   # Show this many fractional digits. Zero means round to seconds.
-  typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_PRECISION=10
+  typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_PRECISION=2
   # Execution time color.
-  typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_FOREGROUND=7
+  typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_FOREGROUND=10
   # Duration format: 1d 2h 3m 4s.
   typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_FORMAT='d h m s'
   # Custom icon.
@@ -433,7 +433,7 @@ fi
 
   ##################[ ranger: ranger shell (https://github.com/ranger/ranger) ]##################
   ## Ranger shell color.
-  #typeset -g POWERLEVEL9K_RANGER_FOREGROUND=1
+  #typeset -g POWERLEVEL9K_RANGER_FOREGROUND=9
   ## Custom icon.
   ## typeset -g POWERLEVEL9K_RANGER_VISUAL_IDENTIFIER_EXPANSION='⭐'
 
@@ -449,7 +449,7 @@ fi
   ## Load color when load is under 50%.
   #typeset -g POWERLEVEL9K_LOAD_NORMAL_FOREGROUND=66
   ## Load color when load is between 50% and 70%.
-  #typeset -g POWERLEVEL9K_LOAD_WARNING_FOREGROUND=1
+  #typeset -g POWERLEVEL9K_LOAD_WARNING_FOREGROUND=9
   ## Load color when load is over 70%.
   #typeset -g POWERLEVEL9K_LOAD_CRITICAL_FOREGROUND=187
   ## Custom icon.
@@ -457,12 +457,12 @@ fi
 
   ####################################[ context: user@host ]####################################
   # Default context color.
-  typeset -g POWERLEVEL9K_CONTEXT_FOREGROUND=7
+  typeset -g POWERLEVEL9K_CONTEXT_FOREGROUND=13
   # Default context format: %n is username, %m is hostname.
-  typeset -g POWERLEVEL9K_CONTEXT_TEMPLATE='%n@%m'
+  typeset -g POWERLEVEL9K_CONTEXT_TEMPLATE='%n'
 
   # Context color when running with privileges.
-  typeset -g POWERLEVEL9K_CONTEXT_ROOT_FOREGROUND=1
+  typeset -g POWERLEVEL9K_CONTEXT_ROOT_FOREGROUND=9
   # # Context format when running with privileges: %n is username, %m is hostname.
   # typeset -g POWERLEVEL9K_CONTEXT_ROOT_TEMPLATE='%n@%m'
 
@@ -661,11 +661,11 @@ fi
   #################################[ battery: internal battery ]#################################
   ## Show battery in red when it's below this level and not connected to power supply.
   #typeset -g POWERLEVEL9K_BATTERY_LOW_THRESHOLD=100
-  #typeset -g POWERLEVEL9K_BATTERY_LOW_FOREGROUND=1
+  #typeset -g POWERLEVEL9K_BATTERY_LOW_FOREGROUND=9
   ## Show battery in green when it's charging.
   #typeset -g POWERLEVEL9K_BATTERY_CHARGING_FOREGROUND=10
   ## Show battery in yellow when not connected to power supply.
-  #typeset -g POWERLEVEL9K_BATTERY_DISCONNECTED_FOREGROUND=1
+  #typeset -g POWERLEVEL9K_BATTERY_DISCONNECTED_FOREGROUND=9
   ## Battery pictograms going from low to high level of charge.
   ## typeset -g POWERLEVEL9K_BATTERY_STAGES='▁▂▃▄▅▆▇'
   ## Display battery pictogram without background.
