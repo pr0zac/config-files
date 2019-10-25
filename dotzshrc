@@ -48,11 +48,12 @@ export FPATH="$HOME/.zsh:$FPATH"
 export EDITOR=vim
 export VISUAL=vim
 export LSCOLORS="gxexfxdacxdadaadhbhefx"
+# export ZLE_RPROMPT_INDENT=0
 alias ls='ls --color=auto'
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
 
 autoload -Uz compinit
-compinit
+compinit -u
 

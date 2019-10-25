@@ -1,0 +1,13 @@
+{
+  "suggest.enablePreview": true,
+  "suggest.echodocSupport": true,
+  "codeLens.enable": true,
+  "cursors.nextKey": "<TAB>",
+  "cursors.previousKey": "<S-TAB>",
+  "typescript.suggest.autoImports": false,
+  "typescript.preferences.quoteStyle": "double",
+  "eslint.filetypes": ["javascript", "typescript", "typescriptreact", "javascriptreact", "typescript.tsx"],
+  "diagnostic.errorSign": "•",
+  "diagnostic.warningSign": "•",
+  "diagnostic.infoSign": "•"
+}
