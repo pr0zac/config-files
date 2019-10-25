@@ -55,5 +55,4 @@ alias ls='ls --color=auto'
 [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
 
 autoload -Uz compinit
-compinit -u
-
+compinit
