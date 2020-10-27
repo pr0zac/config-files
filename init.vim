@@ -14,10 +14,11 @@ if dein#load_state('~/.config/nvim/cache')
   " Required:
   call dein#add('~/.config/nvim/cache/repos/github.com/Shougo/dein.vim')
 
+  call dein#add('wsdjeg/dein-ui.vim')
   call dein#add('pr0zac/onedark.vim')
   call dein#add('othree/yajs.vim')
   call dein#add('HerringtonDarkholme/yats.vim')
-  call dein#add('neoclide/coc.nvim', {'merge': 0, 'rev': 'release'})
+  call dein#add('neoclide/coc.nvim', {'merged': 0, 'rev': 'release'})
   call dein#add('Shougo/denite.nvim')
   call dein#add('Shougo/echodoc.vim')
   call dein#add('junegunn/fzf')
@@ -35,10 +36,10 @@ if dein#load_state('~/.config/nvim/cache')
   call dein#add('scrooloose/nerdtree')
   call dein#add('ryanoasis/vim-devicons')
   call dein#add('jiangmiao/auto-pairs')
-  call dein#add('alvan/vim-closetag')
   call dein#add('mhinz/vim-startify')
   call dein#add('Yggdroot/indentLine')
   call dein#add('elzr/vim-json')
+  call dein#add('bkad/CamelCaseMotion')
 
   " Required:
   call dein#end()
@@ -85,12 +86,14 @@ set tabstop=2
 set shiftwidth=2
 set expandtab
 
+set viminfo+=n~/.vim_other/viminfo
 set undodir=~/.vim_other/_backup
 set undofile
 
 set wildmode=list:longest,full
 set wildmenu
 set completeopt=longest,menu,noinsert,noselect
+set mouse+=a
 
 let mapleader = ","
 
@@ -100,18 +103,24 @@ nnoremap <f1> <esc>
 vnoremap <f1> <esc>
 
 " Fix page-up/page-down behavior
-nnoremap <silent> <PageUp> <C-U><C-U>
-vnoremap <silent> <PageUp> <C-U><C-U>
-inoremap <silent> <PageUp> <C-\><C-O><C-U><C-\><C-O><C-U>
+nnoremap <silent> <PageUp> <C-U>
+vnoremap <silent> <PageUp> <C-U>
+inoremap <silent> <PageUp> <C-\><C-O><C-U>
 
-nnoremap <silent> <PageDown> <C-D><C-D>
-vnoremap <silent> <PageDown> <C-D><C-D>
-inoremap <silent> <PageDown> <C-\><C-O><C-D><C-\><C-O><C-D>
+nnoremap <silent> <PageDown> <C-D>
+vnoremap <silent> <PageDown> <C-D>
+inoremap <silent> <PageDown> <C-\><C-O><C-D>
 
 " Buffer switching shortcuts
 nnoremap gh :bp<CR>
 nnoremap gl :bn<CR>
 nnoremap gq :BD<CR>
+
+" CamelCaseMotion configs
+map <silent> <leader>w <Plug>CamelCaseMotion_w
+map <silent> <leader>b <Plug>CamelCaseMotion_b
+map <silent> <leader>e <Plug>CamelCaseMotion_e
+map <silent> <leader>ge <Plug>CamelCaseMotion_ge
 
 " jump to last cursor position when opening a file
 " don't do it when writing a commit log entry
@@ -137,6 +146,7 @@ let g:closetag_regions = {
 \ }
 
 let g:AutoPairsShortcutToggle=''
+let g:AutoPairsShortcutBackInsert='<C-b>'
 
 " Coc.nvim
 let g:coc_global_extensions = ["coc-tsserver", "coc-eslint", "coc-json", "coc-prettier", "coc-css"]
@@ -214,7 +224,7 @@ let g:airline_section_warning = '%{airline#util#wrap(airline#extensions#coc#get_
 let g:airline#extensions#hunks#non_zero_only = 1
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tabline#switch_buffers_and_tabs = 1
-let g:airline#extensions#tabline#formatter = 'default'
+let g:airline#extensions#tabline#formatter = 'unique_tail'
 let g:airline_theme='onedark'
 let g:airline_powerline_fonts = 1
 set laststatus=2
@@ -246,13 +256,13 @@ let g:DevIconsEnableFolderExtensionPatternMatching = 1
 let WebDevIconsUnicodeDecorateFolderNodesExactMatches = 1
 
 " indentLine
-let g:indentLine_first_char = '|'
-let g:indentLine_char = '|'
-let g:indentLine_showFirstIndentLevel = 1
+let g:indentLine_enabled = 0
+let g:indentLine_char = "|"
 let g:indentLine_color_term = 236
 let g:indentLine_color_gui = '#272A33'
-autocmd WinEnter * :IndentLinesEnable
-autocmd WinLeave * :IndentLinesDisable
+map <C-l> :IndentLinesToggle<CR>
+" autocmd WinEnter * :IndentLinesEnable
+" autocmd WinLeave * :IndentLinesDisable
 let g:vim_json_syntax_conceal = 0
 
 " Show trailing whitespace.
@@ -262,3 +272,4 @@ match ExtraWhitespace /\s\+$/
 autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
 autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
 autocmd InsertLeave * match ExtraWhitespace /\s\+$/
+
