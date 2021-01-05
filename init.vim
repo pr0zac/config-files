@@ -40,6 +40,7 @@ if dein#load_state('~/.config/nvim/cache')
   call dein#add('Yggdroot/indentLine')
   call dein#add('elzr/vim-json')
   call dein#add('bkad/CamelCaseMotion')
+  call dein#add('myusuf3/numbers.vim')
 
   " Required:
   call dein#end()
@@ -66,7 +67,7 @@ hi link tab Error
 set cursorline
 set colorcolumn=81
 
-set number
+set nu rnu
 set backspace=indent,eol,start
 set incsearch
 set hlsearch
@@ -213,7 +214,7 @@ function! FloatingFZF()
 endfunction
 
 nnoremap <silent> <C-p> :call fzf#vim#files('.', {'options': '--prompt ""'})<CR>
-nnoremap <silent> <C-b> :Buffers<CR>
+nnoremap <silent> <C-b> :call fzf#vim#buffers()<CR>
 
 " Airline config
 let g:airline_extensions = ['branch', 'hunks', 'coc', 'tabline']
@@ -272,4 +273,3 @@ match ExtraWhitespace /\s\+$/
 autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
 autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
 autocmd InsertLeave * match ExtraWhitespace /\s\+$/
-
