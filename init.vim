@@ -41,6 +41,7 @@ if dein#load_state('~/.config/nvim/cache')
   call dein#add('elzr/vim-json')
   call dein#add('bkad/CamelCaseMotion')
   call dein#add('myusuf3/numbers.vim')
+  call dein#add('simnalamburt/vim-mundo')
 
   " Required:
   call dein#end()
@@ -175,6 +176,8 @@ nmap <silent> gt <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 map <leader>r :CocCommand document.renameCurrentWord<CR>
+map <leader>r :CocCommand document.renameCurrentWord<CR>
+map <leader>` :CocRestart<CR>
 
 function! s:show_documentation()
   if (index(['vim','help'], &filetype) >= 0)
@@ -273,3 +276,6 @@ match ExtraWhitespace /\s\+$/
 autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
 autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
 autocmd InsertLeave * match ExtraWhitespace /\s\+$/
+map <leader>s :%s/\s\+$//e<CR>
+
+nnoremap <leader>u :MundoToggle<CR>
