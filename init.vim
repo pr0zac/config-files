@@ -1,63 +1,37 @@
-"dein Scripts-----------------------------
-if &compatible
-  set nocompatible               " Be iMproved
+let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
+if empty(glob(data_dir . '/autoload/plug.vim'))
+  silent execute '!curl -fLo '.data_dir.'/autoload/plug.vim --create-dirs  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
 endif
 
-" Required:
-set runtimepath+=/home/pr0zac/.config/nvim/cache/repos/github.com/Shougo/dein.vim
-
-" Required:
-if dein#load_state('~/.config/nvim/cache')
-  call dein#begin('~/.config/nvim/cache')
-
-  " Let dein manage dein
-  " Required:
-  call dein#add('~/.config/nvim/cache/repos/github.com/Shougo/dein.vim')
-
-  call dein#add('wsdjeg/dein-ui.vim')
-  call dein#add('pr0zac/onedark.vim')
-  call dein#add('othree/yajs.vim')
-  call dein#add('HerringtonDarkholme/yats.vim')
-  call dein#add('neoclide/coc.nvim', {'merged': 0, 'rev': 'release'})
-  call dein#add('Shougo/denite.nvim')
-  call dein#add('Shougo/echodoc.vim')
-  call dein#add('junegunn/fzf')
-  call dein#add('junegunn/fzf.vim')
-  call dein#add('jparise/vim-graphql')
-  call dein#add('vim-airline/vim-airline')
-  call dein#add('vim-airline/vim-airline-themes')
-  call dein#add('tpope/vim-commentary')
-  call dein#add('tpope/vim-fugitive')
-  call dein#add('airblade/vim-gitgutter')
-  call dein#add('tpope/vim-surround')
-  call dein#add('luochen1990/rainbow')
-  call dein#add('blueyed/vim-diminactive')
-  call dein#add('qpkorr/vim-bufkill')
-  call dein#add('scrooloose/nerdtree')
-  call dein#add('ryanoasis/vim-devicons')
-  call dein#add('jiangmiao/auto-pairs')
-  call dein#add('mhinz/vim-startify')
-  call dein#add('Yggdroot/indentLine')
-  call dein#add('elzr/vim-json')
-  call dein#add('bkad/CamelCaseMotion')
-  call dein#add('myusuf3/numbers.vim')
-  call dein#add('simnalamburt/vim-mundo')
-
-  " Required:
-  call dein#end()
-  call dein#save_state()
-endif
-
-
-filetype plugin indent on
-syntax enable
-
-" If you want to install not installed plugins on startup.
-" if dein#check_install()
-"  call dein#install()
-" endif
-
-"End dein Scripts-------------------------
+call plug#begin()
+Plug 'pr0zac/onedark.vim'
+Plug 'othree/yajs.vim'
+Plug 'HerringtonDarkholme/yats.vim'
+Plug 'neoclide/coc.nvim', {'merged': 0, 'rev': 'release'}
+Plug 'Shougo/echodoc.vim'
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+Plug 'jparise/vim-graphql'
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+Plug 'tpope/vim-commentary'
+Plug 'tpope/vim-fugitive'
+Plug 'airblade/vim-gitgutter'
+Plug 'tpope/vim-surround'
+Plug 'luochen1990/rainbow'
+Plug 'blueyed/vim-diminactive'
+Plug 'qpkorr/vim-bufkill'
+Plug 'scrooloose/nerdtree'
+Plug 'ryanoasis/vim-devicons'
+Plug 'jiangmiao/auto-pairs'
+Plug 'mhinz/vim-startify'
+Plug 'Yggdroot/indentLine'
+Plug 'elzr/vim-json'
+Plug 'bkad/CamelCaseMotion'
+Plug 'myusuf3/numbers.vim'
+Plug 'simnalamburt/vim-mundo'
+call plug#end()
 
 autocmd!
 set termguicolors
@@ -200,7 +174,7 @@ function! FloatingFZF()
   call setbufvar(buf, '&signcolumn', 'no')
 
   let height = float2nr(30)
-  let width = float2nr(100)
+  let width = float2nr(150)
   let horizontal = float2nr((&columns - width) / 2)
   let vertical = float2nr((&lines - height) / 2)
 
@@ -247,7 +221,6 @@ let g:webdevicons_enable = 1
 let g:webdevicons_enable_nerdtree = 1
 let g:webdevicons_enable_airline_tabline = 1
 let g:webdevicons_enable_airline_statusline = 1
-let g:webdevicons_enable_denite = 1
 let g:webdevicons_enable_startify = 1
 let g:WebDevIconsUnicodeDecorateFileNodes = 1
 let g:WebDevIconsUnicodeGlyphDoubleWidth = 1
