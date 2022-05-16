@@ -6,9 +6,10 @@ endif
 
 call plug#begin()
 Plug 'pr0zac/onedark.vim'
+" Plug 'joshdick/onedark.vim'
 Plug 'othree/yajs.vim'
 Plug 'HerringtonDarkholme/yats.vim'
-Plug 'neoclide/coc.nvim', {'merged': 0, 'rev': 'release'}
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'Shougo/echodoc.vim'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
@@ -125,6 +126,7 @@ let g:AutoPairsShortcutToggle=''
 let g:AutoPairsShortcutBackInsert='<C-b>'
 
 " Coc.nvim
+hi CocUnderline guibg=#E5C07B guifg=black
 let g:coc_global_extensions = ["coc-tsserver", "coc-eslint", "coc-json", "coc-prettier", "coc-css"]
 let g:echodoc_enable_at_startup = 1
 autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
@@ -252,3 +254,4 @@ autocmd InsertLeave * match ExtraWhitespace /\s\+$/
 map <leader>s :%s/\s\+$//e<CR>
 
 nnoremap <leader>u :MundoToggle<CR>
+nnoremap <leader>j :execute '%!python -m json.tool'<CR>
