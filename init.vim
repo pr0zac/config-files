@@ -131,14 +131,14 @@ let g:coc_global_extensions = ["coc-tsserver", "coc-eslint", "coc-json", "coc-pr
 let g:echodoc_enable_at_startup = 1
 autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
 
-function! s:check_back_space() abort
+function! CheckBackSpace() abort
   let col = col('.') - 1
   return !col || getline('.')[col - 1]  =~ '\s'
 endfunction
 
 inoremap <silent><expr> <TAB>
   \ pumvisible() ? "\<C-n>" :
-  \ <SID>check_back_space() ? "\<TAB>" :
+  \ CheckBackSpace() ? "\<TAB>" :
   \ coc#refresh()
 autocmd CompleteDone * if pumvisible() == 0 | pclose | endif
 
