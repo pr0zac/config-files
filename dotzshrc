@@ -1,3 +1,10 @@
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
 #
 # Executes commands at the start of an interactive session.
 #
@@ -43,7 +50,7 @@ bindkey '\e[3~' delete-char
 bindkey '^R' history-incremental-search-backward
 
 export GOPATH="$HOME/gocode"
-export PATH="$HOME/bin:$GOPATH/bin:$ANDROID_HOME/tools:/usr/local/sbin:/usr/local/bin/:$HOME/.gem/ruby/2.6.0/bin:$PATH"
+export PATH="$HOME/bin:$GOPATH/bin:$ANDROID_HOME/tools:/usr/local/sbin:/usr/local/bin/:$HOME/.gem/ruby/2.6.0/bin:$PATH:/opt/metasploit-framework/bin/"
 export FPATH="$HOME/.zsh:$FPATH"
 export EDITOR=vim
 export VISUAL=vim
@@ -54,5 +61,18 @@ alias ls='ls --color=auto'
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
 
-autoload -Uz compinit
-compinit
+if type brew &>/dev/null; then
+  FPATH=$(brew --prefix)/share/zsh-completions:$FPATH
+
+  autoload -Uz compinit
+  compinit
+fi
+
+source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+source "/opt/homebrew/opt/zsh-git-prompt/zshrc.sh"
+source /opt/homebrew/share/zsh-history-substring-search/zsh-history-substring-search.zsh
+source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+source /opt/homebrew/opt/zsh-vi-mode/share/zsh-vi-mode/zsh-vi-mode.plugin.zsh
+
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+
