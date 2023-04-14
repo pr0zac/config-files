@@ -1,0 +1,50 @@
+#navigator-toolbox {
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+#TabsToolbar {
+  background-color: var(--toolbar-bgcolor);
+}
+
+.tabbrowser-tab {
+  visibility: collapse;
+}
+
+.titlebar-button {
+  height: 48px;
+}
+
+#toolbar-menubar {
+  max-height: 28px;
+}
+
+#nav-bar {
+  height: 48px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: -48px ;
+  margin-right: 100px;
+}
+
+[uidensity="compact"]:root .titlebar-button {
+  height: 48px;
+}
+[uidensity="compact"]:root #nav-bar {
+  margin-top: -48px;
+}
+
+#main-window[inFullscreen="true"] #sidebar-box,
+#main-window[inFullscreen="true"] #sidebar-box + splitter {
+  visibility: collapse;
+}
+
+#sidebar-box #sidebar-header {
+  display: none;
+}
+
+#urlbar {
+  --urlbar-height: 32px !important;
+  --urlbar-toolbar-height: 40px !important;
+}
