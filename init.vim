@@ -10,7 +10,6 @@ Plug 'pr0zac/onedark.vim'
 Plug 'othree/yajs.vim'
 Plug 'HerringtonDarkholme/yats.vim'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
-Plug 'Shougo/echodoc.vim'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'jparise/vim-graphql'
@@ -32,14 +31,14 @@ Plug 'elzr/vim-json'
 Plug 'bkad/CamelCaseMotion'
 Plug 'myusuf3/numbers.vim'
 Plug 'simnalamburt/vim-mundo'
+Plug 'python-mode/python-mode', { 'for': 'python', 'branch': 'develop' }
+Plug 'github/copilot.vim'
 call plug#end()
 
 autocmd!
 set termguicolors
 colorscheme onedark
 syntax on
-syn match tab display "\t"
-hi link tab Error
 set cursorline
 set colorcolumn=81
 
@@ -55,7 +54,7 @@ set showbreak=...
 set wrap linebreak nolist
 set hidden
 set cmdheight=2
-set updatetime=300
+set updatetime=250
 
 set smarttab
 set softtabstop=2
@@ -66,6 +65,7 @@ set expandtab
 set viminfo+=n~/.vim_other/viminfo
 set undodir=~/.vim_other/_backup
 set undofile
+set signcolumn=yes
 
 set wildmode=list:longest,full
 set wildmenu
@@ -127,42 +127,73 @@ let g:AutoPairsShortcutBackInsert='<C-b>'
 
 " Coc.nvim
 hi CocUnderline guibg=#E5C07B guifg=black
-let g:coc_global_extensions = ["coc-tsserver", "coc-eslint", "coc-json", "coc-prettier", "coc-css", "coc-pyright"]
-let g:echodoc_enable_at_startup = 1
+let g:coc_global_extensions = ["coc-tsserver", "coc-eslint", "coc-json", "coc-prettier", "coc-css", "coc-pyright", "coc-vimlsp"]
 autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
 
-function! CheckBackSpace() abort
+" Use tab for trigger completion with characters ahead and navigate
+" NOTE: There's always complete item selected by default, you may want to enable
+" no select by `"suggest.noselect": true` in your configuration file
+" NOTE: Use command ':verbose imap <tab>' to make sure tab is not mapped by
+" other plugin before putting this into your config
+inoremap <silent><expr> <TAB>
+      \ coc#pum#visible() ? coc#pum#next(1) :
+      \ CheckBackspace() ? "\<Tab>" :
+      \ coc#refresh()
+inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<S-TAB>"
+
+" Make <CR> to accept selected completion item or notify coc.nvim to format
+" <C-g>u breaks current undo, please make your own choice
+inoremap <silent><expr> <CR> coc#pum#visible() ? coc#_select_confirm()
+                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+
+function! CheckBackspace() abort
   let col = col('.') - 1
-  return !col || getline('.')[col - 1]  =~ '\s'
+  return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
 
-inoremap <silent><expr> <TAB>
-  \ pumvisible() ? "\<C-n>" :
-  \ CheckBackSpace() ? "\<TAB>" :
-  \ coc#refresh()
-autocmd CompleteDone * if pumvisible() == 0 | pclose | endif
+" Use <c-space> to trigger completion
+if has('nvim')
+  inoremap <silent><expr> <c-space> coc#refresh()
+else
+  inoremap <silent><expr> <c-@> coc#refresh()
+endif
 
-inoremap <silent><expr><S-TAB> pumvisible() ? "\<C-p>" : "\<S-TAB>"
-inoremap <silent><expr><CR> pumvisible() ? coc#_select_confirm() : "\<C-g>u\<CR>"
-map <silent><C-j> <Plug>(coc-definition)
-nmap <silent> ]d <Plug>(coc-diagnostic-next)
+" Use `[d` and `]d` to navigate diagnostics
+" Use `:CocDiagnostics` to get all diagnostics of current buffer in location list
+nmap <silent> ]d <plug>(coc-diagnostic-next)
 nmap <silent> [d <Plug>(coc-diagnostic-prev)
-nmap <silent> gd <Plug>(coc-definition)
+
+" GoTo code navigation
 nmap <silent> gt <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
-map <leader>r :CocCommand document.renameCurrentWord<CR>
-map <leader>r :CocCommand document.renameCurrentWord<CR>
-map <leader>` :CocRestart<CR>
 
-function! s:show_documentation()
+" Use ctrl+t to jump to definition
+function! s:JumpToDefinition()
   if (index(['vim','help'], &filetype) >= 0)
     execute 'h '.expand('<cword>')
   else
-    call CocAction('doHover')
+    call CocActionAsync('jumpDefinition')
   endif
 endfunction
-map <silent><C-t> :call <SID>show_documentation()<CR>
+
+nmap <silent> gd <Plug>(coc-definition)
+map <silent><C-j> :call <SID>JumpToDefinition()<CR>
+
+" Use ctrl+t to show documentation in popup window
+function! s:ShowDocumentation()
+  if CocAction('hasProvider', 'hover')
+    call CocActionAsync('doHover')
+  endif
+endfunction
+map <silent><C-t> :call <SID>ShowDocumentation()<CR>
+
+map <leader>r <Plug>(coc-rename)
+map <leader>` :CocRestart<CR>
+map <leader>f  <Plug>(coc-format-selected)
+
+" Highlight symbol and references when cursor isn't moving
+autocmd CursorHold * silent call CocActionAsync('highlight')
 
 " fzf.vim
 set wildmode=list:longest,list:full
@@ -244,13 +275,16 @@ map <C-l> :IndentLinesToggle<CR>
 " autocmd WinLeave * :IndentLinesDisable
 let g:vim_json_syntax_conceal = 0
 
+function! RematchWhitespace()
+  highlight ExtraWhitespace ctermbg=204 guibg=#E06C75
+  match ExtraWhitespace /\s\+$/
+endfunction
+
 " Show trailing whitespace.
-autocmd ColorScheme * highlight ExtraWhitespace ctermbg=red guibg=red
-highlight ExtraWhitespace ctermbg=red guibg=red
-match ExtraWhitespace /\s\+$/
-autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
-autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
-autocmd InsertLeave * match ExtraWhitespace /\s\+$/
+autocmd ColorScheme * call RematchWhitespace()
+autocmd BufWinEnter * call RematchWhitespace()
+autocmd InsertEnter * call RematchWhitespace()
+autocmd InsertLeave * call RematchWhitespace()
 map <leader>s :%s/\s\+$//e<CR>
 
 nnoremap <leader>u :MundoToggle<CR>
