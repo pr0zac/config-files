@@ -32,6 +32,7 @@ Plug 'bkad/CamelCaseMotion'
 Plug 'myusuf3/numbers.vim'
 Plug 'simnalamburt/vim-mundo'
 Plug 'python-mode/python-mode', { 'for': 'python', 'branch': 'develop' }
+Plug 'psf/black', { 'branch': 'stable' }
 Plug 'github/copilot.vim'
 call plug#end()
 
@@ -127,7 +128,7 @@ let g:AutoPairsShortcutBackInsert='<C-b>'
 
 " Coc.nvim
 hi CocUnderline guibg=#E5C07B guifg=black
-let g:coc_global_extensions = ["coc-tsserver", "coc-eslint", "coc-json", "coc-prettier", "coc-css", "coc-pyright", "coc-vimlsp"]
+let g:coc_global_extensions = ["coc-tsserver", "coc-eslint", "coc-json", "coc-prettier", "coc-css", "coc-pyright", "coc-vimlsp", "coc-go"]
 autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
 
 " Use tab for trigger completion with characters ahead and navigate
@@ -145,6 +146,13 @@ inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<S-TAB>"
 " <C-g>u breaks current undo, please make your own choice
 inoremap <silent><expr> <CR> coc#pum#visible() ? coc#_select_confirm()
                               \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+
+" Use <C-Tab> to trigger copilot completion.
+inoremap <silent><expr> <C-l> copilot#Accept("")
+inoremap <silent><expr> <C-j> copilot#Next()
+inoremap <silent><expr> <C-k> copilot#Previous()
+inoremap <silent><expr> <C-h> copilot#Dismiss()
+let g:copilot_no_tab_map = v:true
 
 function! CheckBackspace() abort
   let col = col('.') - 1
@@ -188,9 +196,17 @@ function! s:ShowDocumentation()
 endfunction
 map <silent><C-t> :call <SID>ShowDocumentation()<CR>
 
-map <leader>r <Plug>(coc-rename)
-map <leader>` :CocRestart<CR>
-map <leader>f  <Plug>(coc-format-selected)
+function! <SID>FormatFile()
+  if &filetype == 'python'
+    execute 'Black'
+  else
+    call CocActionAsync('format')
+  endif
+endfunction
+
+noremap <leader>n <Plug>(coc-rename)
+noremap <leader>` :CocRestart<CR>
+noremap <leader>f :call <SID>FormatFile()<CR>
 
 " Highlight symbol and references when cursor isn't moving
 autocmd CursorHold * silent call CocActionAsync('highlight')
@@ -270,22 +286,28 @@ let g:indentLine_enabled = 0
 let g:indentLine_char = "|"
 let g:indentLine_color_term = 236
 let g:indentLine_color_gui = '#272A33'
-map <C-l> :IndentLinesToggle<CR>
+map <leader>l :IndentLinesToggle<CR>
 " autocmd WinEnter * :IndentLinesEnable
 " autocmd WinLeave * :IndentLinesDisable
 let g:vim_json_syntax_conceal = 0
 
+" make sure all text is visible
 function! RematchWhitespace()
   highlight ExtraWhitespace ctermbg=204 guibg=#E06C75
   match ExtraWhitespace /\s\+$/
+  hi Conceal cterm=underline gui=underline ctermfg=59 guifg=#5c6370
 endfunction
 
 " Show trailing whitespace.
 autocmd ColorScheme * call RematchWhitespace()
-autocmd BufWinEnter * call RematchWhitespace()
+autocmd BufRead * call RematchWhitespace()
 autocmd InsertEnter * call RematchWhitespace()
 autocmd InsertLeave * call RematchWhitespace()
 map <leader>s :%s/\s\+$//e<CR>
 
 nnoremap <leader>u :MundoToggle<CR>
+
+let g:loaded_python_provider = 0
+let g:python3_host_prog = '/Users/zmorris/.pyenv/shims/python'
+set pyxversion=3
 nnoremap <leader>j :execute '%!python -m json.tool'<CR>

@@ -1,6 +1,7 @@
 {
   "suggest.enablePreview": true,
   "suggest.echodocSupport": true,
+  "suggest.noselect": true,
   "codeLens.enable": true,
   "cursors.nextKey": "<TAB>",
   "cursors.previousKey": "<S-TAB>",
@@ -9,5 +10,8 @@
   "eslint.filetypes": ["javascript", "typescript", "typescriptreact", "javascriptreact", "typescript.tsx"],
   "diagnostic.errorSign": "•",
   "diagnostic.warningSign": "•",
-  "diagnostic.infoSign": "•"
+  "diagnostic.infoSign": "•",
+  "python.venvPath": "/Users/zmorris/.pyenv/versions",
+  "python.formatting.provider": "black",
+  "python.formatting.blackPath": "/Users/zmorris/.pyenv/shims/black"
 }
