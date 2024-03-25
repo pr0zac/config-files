@@ -11,7 +11,7 @@
   "diagnostic.errorSign": "•",
   "diagnostic.warningSign": "•",
   "diagnostic.infoSign": "•",
-  "python.venvPath": "/Users/zmorris/.pyenv/versions",
+  "python.venvPath": "$HOME/.pyenv/versions",
   "python.formatting.provider": "black",
-  "python.formatting.blackPath": "/Users/zmorris/.pyenv/shims/black"
+  "python.formatting.blackPath": "HOME/.pyenv/shims/black"
 }

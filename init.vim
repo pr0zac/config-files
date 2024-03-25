@@ -34,6 +34,12 @@ Plug 'simnalamburt/vim-mundo'
 Plug 'python-mode/python-mode', { 'for': 'python', 'branch': 'develop' }
 Plug 'psf/black', { 'branch': 'stable' }
 Plug 'github/copilot.vim'
+Plug 'nvim-lua/plenary.nvim'
+Plug 'MunifTanjim/nui.nvim'
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.6' }
+Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' }
+Plug 'fannheyward/telescope-coc.nvim'
 call plug#end()
 
 autocmd!
@@ -186,7 +192,7 @@ function! s:JumpToDefinition()
 endfunction
 
 nmap <silent> gd <Plug>(coc-definition)
-map <silent><C-j> :call <SID>JumpToDefinition()<CR>
+nmap <silent><C-j> :call <SID>JumpToDefinition()<CR>
 
 " Use ctrl+t to show documentation in popup window
 function! s:ShowDocumentation()
@@ -214,44 +220,74 @@ autocmd CursorHold * silent call CocActionAsync('highlight')
 " fzf.vim
 set wildmode=list:longest,list:full
 set wildignore+=*.o,*.obj,.git,*.rbc,*.pyc,__pycache__
-let $FZF_DEFAULT_COMMAND = 'ag -g ""'
-let $FZF_DEFAULT_OPTS = '--color=fg:#D7D9D9,bg:#191B21,hl:#E06C75 --layout=reverse  --margin=1,2'
-let g:fzf_layout = { 'window': 'call FloatingFZF()' }
+" let $FZF_DEFAULT_COMMAND = 'ag -g ""'
+" let $FZF_DEFAULT_OPTS = '--color=fg:#D7D9D9,bg:#191B21,hl:#E06C75 --layout=reverse  --margin=1,2'
+" let g:fzf_layout = { 'window': 'call FloatingFZF()' }
 
-function! FloatingFZF()
-  let buf = nvim_create_buf(v:false, v:true)
-  call setbufvar(buf, '&signcolumn', 'no')
+" function! FloatingFZF()
+"   let buf = nvim_create_buf(v:false, v:true)
+"   call setbufvar(buf, '&signcolumn', 'no')
 
-  let height = float2nr(30)
-  let width = float2nr(150)
-  let horizontal = float2nr((&columns - width) / 2)
-  let vertical = float2nr((&lines - height) / 2)
+"   let height = float2nr(30)
+"   let width = float2nr(150)
+"   let horizontal = float2nr((&columns - width) / 2)
+"   let vertical = float2nr((&lines - height) / 2)
 
-  let opts = {
-        \ 'relative': 'editor',
-        \ 'row': vertical,
-        \ 'col': horizontal,
-        \ 'width': width,
-        \ 'height': height,
-        \ 'style': 'minimal'
-        \ }
+"   let opts = {
+"         \ 'relative': 'editor',
+"         \ 'row': vertical,
+"         \ 'col': horizontal,
+"         \ 'width': width,
+"         \ 'height': height,
+"         \ 'style': 'minimal'
+"         \ }
 
-  call nvim_open_win(buf, v:true, opts)
-endfunction
+"   call nvim_open_win(buf, v:true, opts)
+" endfunction
 
-nnoremap <silent> <C-p> :call fzf#vim#files('.', {'options': '--prompt ""'})<CR>
-nnoremap <silent> <C-b> :call fzf#vim#buffers()<CR>
+nnoremap <silent> <C-p> <cmd>Telescope find_files<cr>
+nnoremap <silent> <C-b> <cmd>Telescope buffers<cr>
+nnoremap <silent> <C-s> <cmd>Telescope live_grep<cr>
+nnoremap <leader>t <cmd>Telescope<cr>
+
 
 " Airline config
+let g:airline#extensions#branch#enabled = 1
+let g:airline#extensions#branch#notexists = '✖'
+let g:airline#extensions#branch#symbol = ' '
+function! CustomBranchName(name)
+  return a:name . ' '
+endfunction
+let g:airline#extensions#branch#format = 'CustomBranchName'
+let g:airline#extensions#hunks#enabled = 1
+let g:airline#extensions#hunks#non_zero_only = 1
 let g:airline_extensions = ['branch', 'hunks', 'coc', 'tabline']
-let airline#extensions#coc#stl_format_err = '%E{[%e(#%fe)]}'
-let airline#extensions#coc#stl_format_warn = '%W{[%w(#%fw)]}'
+let g:airline#extensions#coc#enabled = 1
+let g:airline#extensions#coc#error_symbol = ' '
+let g:airline#extensions#coc#warning_symbol = ' '
 let g:airline_section_error = '%{airline#util#wrap(airline#extensions#coc#get_error(),0)}'
 let g:airline_section_warning = '%{airline#util#wrap(airline#extensions#coc#get_warning(),0)}'
-let g:airline#extensions#hunks#non_zero_only = 1
 let g:airline#extensions#tabline#enabled = 1
-let g:airline#extensions#tabline#switch_buffers_and_tabs = 1
+let g:airline#extensions#tabline#show_buffers = 1
+let g:airline#extensions#tabline#show_splits = 1
+let g:airline#extensions#tabline#buffer_nr_show = 0
 let g:airline#extensions#tabline#formatter = 'unique_tail'
+let g:airline#extensions#tabline#buffer_idx_mode = 1
+let g:airline#extensions#tabline#show_tab_nr = 1
+let g:airline#extensions#tabline#tab_nr_type = 1
+let g:airline#extensions#tabline#show_tab_type = 0
+nmap <leader>1 <Plug>AirlineSelectTab1
+nmap <leader>2 <Plug>AirlineSelectTab2
+nmap <leader>3 <Plug>AirlineSelectTab3
+nmap <leader>4 <Plug>AirlineSelectTab4
+nmap <leader>5 <Plug>AirlineSelectTab5
+nmap <leader>6 <Plug>AirlineSelectTab6
+nmap <leader>7 <Plug>AirlineSelectTab7
+nmap <leader>8 <Plug>AirlineSelectTab8
+nmap <leader>9 <Plug>AirlineSelectTab9
+nmap <leader>0 <Plug>AirlineSelectTab0
+nmap <leader>[ <Plug>AirlineSelectPrevTab
+nmap <leader>] <Plug>AirlineSelectNextTab
 let g:airline_theme='onedark'
 let g:airline_powerline_fonts = 1
 set laststatus=2
@@ -303,11 +339,37 @@ autocmd ColorScheme * call RematchWhitespace()
 autocmd BufRead * call RematchWhitespace()
 autocmd InsertEnter * call RematchWhitespace()
 autocmd InsertLeave * call RematchWhitespace()
-map <leader>s :%s/\s\+$//e<CR>
+map <leader>w :%s/\s\+$//e<CR>
 
 nnoremap <leader>u :MundoToggle<CR>
 
 let g:loaded_python_provider = 0
-let g:python3_host_prog = '/Users/zmorris/.pyenv/shims/python'
+let g:python3_host_prog = '$HOME/.pyenv/shims/python'
 set pyxversion=3
 nnoremap <leader>j :execute '%!python -m json.tool'<CR>
+
+:lua << EOF
+require'nvim-treesitter.configs'.setup {
+  ensure_installed = { "python", "vim", "vimdoc", "typescript", "javascript", "json", "html", "yaml", "css", "graphql", "terraform", "sql", "bash", "lua" },
+  sync_install = true,
+  auto_install = true,
+
+  highlight = {
+    enable = false,
+    additional_vim_regex_highlighting = false,
+  },
+}
+
+require('telescope').setup {
+  extensions = {
+    fzf = {
+      fuzzy = true,
+      override_generic_sorter = true,
+      override_file_sorter = true,
+      case_mode = "smart_case",
+    }
+  }
+}
+require('telescope').load_extension('fzf')
+require('telescope').load_extension('coc')
+EOF
