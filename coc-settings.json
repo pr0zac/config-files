@@ -13,5 +13,17 @@
   "diagnostic.infoSign": "•",
   "python.venvPath": "$HOME/.pyenv/versions",
   "python.formatting.provider": "black",
-  "python.formatting.blackPath": "HOME/.pyenv/shims/black"
+  "python.formatting.blackPath": "$HOME/.pyenv/shims/black",
+  "languageserver": {
+    "terraform": {
+      "command": "terraform-ls",
+      "args": ["serve"],
+      "filetypes": [
+        "terraform",
+        "tf"
+      ],
+      "initializationOptions": {},
+      "settings": {}
+    }
+  }
 }

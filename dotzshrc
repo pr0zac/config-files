@@ -97,6 +97,7 @@ HISTFILE=~/.histfile
 HISTSIZE=1000000
 SAVEHIST=1000000
 
+export ZSH_TMUX_AUTOCONNECT=false
 export GOPATH="$HOME/gocode"
 export PATH="$HOME/.fzf/bin:/opt/homebrew/bin:$HOME/bin:$GOPATH/bin:$ANDROID_HOME/tools:/usr/local/sbin:/usr/local/bin/:$HOME/.gem/ruby/2.6.0/bin:/opt/metasploit-framework/bin/:/opt/homebrew/opt/curl/bin:$PATH"
 export FPATH="$HOME/.zsh:$FPATH"
@@ -108,8 +109,10 @@ export LSCOLORS="gxexfxdacxdadaadhbhefx"
 alias ls='ls --color=auto'
 alias vim='nvim'
 alias k='kubectl'
-alias less='nvimpager'
-alias cat='bat'
+alias less='bat -f --pager=/usr/bin/less'
+alias cat='bat -f'
+alias oldtail='/usr/bin/tail'
+alias tail='grc /usr/bin/tail'
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
